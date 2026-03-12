@@ -3,6 +3,12 @@
 <a target="_blank" href="https://cookiecutter-data-science.drivendata.org/">
     <img src="https://img.shields.io/badge/CCDS-Project%20template-328F97?logo=cookiecutter" />
 </a>
+<a target="_blank" href="https://pixi.prefix.dev/">
+    <img src="https://img.shields.io/badge/pixi-Environment%20Manager-3776AB?logo=python" />
+</a>
+<a target="_blank" href="https://typer.tiangolo.com/">
+    <img src="https://img.shields.io/badge/Typer-CLI%20Framework-009485" />
+</a>
 
 Topological analysis on graphs and networks.
 
