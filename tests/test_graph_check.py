@@ -1,13 +1,13 @@
 import networkx as nx
 import pytest
 
+from topograph.core.graph_check import check_graph
 from topograph.examples import (
     easy_path_graph,
     invalid_disconnected_graph,
     invalid_duplicate_scalar_graph,
     invalid_missing_scalar_graph,
 )
-from topograph.core.graph_check import check_graph
 
 
 def test_check_graph_accepts_valid_connected_graph_with_numeric_scalars():
