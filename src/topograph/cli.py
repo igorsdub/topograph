@@ -1,12 +1,6 @@
-import typer
+"""TopGraph CLI entry point."""
 
-from .transforms import app as transforms_app
-from .version import app as version_app
-
-app = typer.Typer()
-
-app.add_typer(transforms_app, name="transforms")
-app.add_typer(version_app)
+from .cli.main import app
 
 if __name__ == "__main__":
     app()
