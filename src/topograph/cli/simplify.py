@@ -12,6 +12,4 @@ def threshold(
     epsilon: float = typer.Option(..., help="Simplification threshold"),
 ):
     """Simplify topological structure using persistence threshold."""
-    typer.echo(
-        f"Simplifying with epsilon={epsilon}: {input_file} -> {output_file}"
-    )
+    typer.echo(f"Simplifying with epsilon={epsilon}: {input_file} -> {output_file}")
