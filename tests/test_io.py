@@ -4,18 +4,23 @@ import pickle
 import networkx as nx
 import pytest
 
+from topograph.examples import easy_path_graph
 from topograph.io.convert import convert_graph
 from topograph.io.load import load_graph
 from topograph.io.save import save_graph
 
 
 def _sample_graph() -> nx.Graph:
-    graph = nx.Graph(name="sample")
-    graph.add_node("a", value=1)
-    graph.add_node("b", value=2)
-    graph.add_node("c", value=3)
-    graph.add_edge("a", "b", weight=1.5)
-    graph.add_edge("b", "c", weight=2.5)
+    graph = nx.relabel_nodes(easy_path_graph(3), {0: "a", 1: "b", 2: "c"})
+    graph.graph["name"] = "sample"
+
+    graph.nodes["a"]["value"] = 1
+    graph.nodes["b"]["value"] = 2
+    graph.nodes["c"]["value"] = 3
+
+    graph.edges[("a", "b")]["weight"] = 1.5
+    graph.edges[("b", "c")]["weight"] = 2.5
+
     return graph
 
 

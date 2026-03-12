@@ -1,21 +1,17 @@
 import networkx as nx
 import pytest
 
+from topograph.examples import (
+    easy_path_graph,
+    invalid_disconnected_graph,
+    invalid_duplicate_scalar_graph,
+    invalid_missing_scalar_graph,
+)
 from topograph.core.graph_check import check_graph
 
 
-def _connected_graph() -> nx.Graph:
-    G = nx.Graph()
-    G.add_edge(0, 1)
-    G.add_edge(1, 2)
-    G.nodes[0]["scalar"] = 0.0
-    G.nodes[1]["scalar"] = 1
-    G.nodes[2]["scalar"] = 2.5
-    return G
-
-
 def test_check_graph_accepts_valid_connected_graph_with_numeric_scalars():
-    G = _connected_graph()
+    G = easy_path_graph(3)
     assert check_graph(G) is True
 
 
@@ -31,37 +27,27 @@ def test_check_graph_rejects_empty_graph():
 
 
 def test_check_graph_rejects_disconnected_graph_when_required():
-    G = nx.Graph()
-    G.add_nodes_from([0, 1])
-    G.nodes[0]["scalar"] = 0
-    G.nodes[1]["scalar"] = 1
+    G = invalid_disconnected_graph()
 
     with pytest.raises(ValueError, match="Graph must be connected"):
         check_graph(G, require_connected=True)
 
 
 def test_check_graph_allows_disconnected_graph_when_not_required():
-    G = nx.Graph()
-    G.add_nodes_from([0, 1])
-    G.nodes[0]["scalar"] = 0
-    G.nodes[1]["scalar"] = 1
+    G = invalid_disconnected_graph()
 
     assert check_graph(G, require_connected=False) is True
 
 
 def test_check_graph_rejects_missing_scalar_attribute():
-    G = nx.Graph()
-    G.add_edge(0, 1)
-    G.nodes[0]["scalar"] = 0
+    G = invalid_missing_scalar_graph()
 
     with pytest.raises(ValueError, match="missing scalar attribute"):
         check_graph(G)
 
 
 def test_check_graph_rejects_non_numeric_scalar_values():
-    G = nx.Graph()
-    G.add_edge(0, 1)
-    G.nodes[0]["scalar"] = 0
+    G = easy_path_graph(2)
     G.nodes[1]["scalar"] = "high"
 
     with pytest.raises(ValueError, match="must be numeric"):
@@ -69,10 +55,7 @@ def test_check_graph_rejects_non_numeric_scalar_values():
 
 
 def test_check_graph_rejects_duplicate_scalar_values():
-    G = nx.Graph()
-    G.add_edge(0, 1)
-    G.nodes[0]["scalar"] = 1.0
-    G.nodes[1]["scalar"] = 1
+    G = invalid_duplicate_scalar_graph()
 
     with pytest.raises(ValueError, match="Duplicate scalar values detected"):
         check_graph(G)

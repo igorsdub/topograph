@@ -4,17 +4,10 @@ import networkx as nx
 from typer.testing import CliRunner
 
 from topograph.cli.main import app
+from topograph.examples import easy_path_graph, invalid_missing_scalar_graph
 from topograph.io.load import load_graph
 
 runner = CliRunner()
-
-
-def _sample_graph() -> nx.Graph:
-    graph = nx.Graph(name="sample")
-    graph.add_node("a", value=1)
-    graph.add_node("b", value=2)
-    graph.add_edge("a", "b", weight=1.5)
-    return graph
 
 
 def _write_pickle_graph(path, graph: nx.Graph) -> None:
@@ -25,7 +18,7 @@ def _write_pickle_graph(path, graph: nx.Graph) -> None:
 def test_convert_command_converts_graph(tmp_path):
     source_path = tmp_path / "source.pkl"
     target_path = tmp_path / "converted.gexf"
-    _write_pickle_graph(source_path, _sample_graph())
+    _write_pickle_graph(source_path, easy_path_graph(2))
 
     result = runner.invoke(app, ["convert", str(source_path), str(target_path)])
 
@@ -47,9 +40,7 @@ def test_split_tree_compute_rejects_missing_scalar(tmp_path):
     source_path = tmp_path / "invalid.pkl"
     output_path = tmp_path / "split_tree.pkl"
 
-    graph = nx.Graph()
-    graph.add_edge("a", "b")
-    graph.nodes["a"]["scalar"] = 1.0
+    graph = invalid_missing_scalar_graph()
 
     _write_graph(source_path, graph)
 
@@ -66,10 +57,7 @@ def test_run_pipeline_validates_graph_before_execution(tmp_path):
     source_path = tmp_path / "valid.pkl"
     output_path = tmp_path / "output.pkl"
 
-    graph = nx.Graph()
-    graph.add_edge("a", "b")
-    graph.nodes["a"]["scalar"] = 1.0
-    graph.nodes["b"]["scalar"] = 2.0
+    graph = easy_path_graph(2)
 
     _write_graph(source_path, graph)
 
