@@ -2,7 +2,7 @@
 # GLOBALS                                                                       #
 #################################################################################
 
-PROJECT_NAME = topograph
+PROJECT_NAME = topographer
 PYTHON_VERSION = 3.10
 PYTHON_INTERPRETER = python
 

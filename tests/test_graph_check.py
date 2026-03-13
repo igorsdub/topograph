@@ -1,8 +1,8 @@
 import networkx as nx
 import pytest
 
-from topograph.core.graph_check import check_graph
-from topograph.examples import (
+from topographer.core.graph_check import check_graph
+from topographer.examples import (
     easy_path_graph,
     invalid_disconnected_graph,
     invalid_duplicate_scalar_graph,

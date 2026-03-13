@@ -1,4 +1,4 @@
-# TopoGraph
+# TopoGrapher
 
 <a target="_blank" href="https://cookiecutter-data-science.drivendata.org/">
     <img src="https://img.shields.io/badge/CCDS-Project%20template-328F97?logo=cookiecutter" />
@@ -34,7 +34,7 @@ Topological analysis on graphs and networks.
 │   ├── example_scalar_graph.py
 │   └── example_cli.sh
 ├── src/
-│   └── topograph/              <- Main package source code
+│   └── topographer/              <- Main package source code
 │       ├── __init__.py
 │       ├── cli.py              <- Command-line interface
 │       ├── exceptions.py        <- Custom exceptions
@@ -114,19 +114,19 @@ K --> L([Simplified contour tree<br/>and persistence summary])
 
 ## CLI Convert Example
 
-Use `topograph convert` to convert graph files between `pkl`, `graphml`, `gml`, `gexf`, and `json`.
+Use `topographer convert` to convert graph files between `pkl`, `graphml`, `gml`, `gexf`, and `json`.
 
 Show command help:
 
 ```bash
-topograph convert --help
+topographer convert --help
 ```
 
 Convert between formats:
 
 ```bash
-topograph convert data/source.pkl data/converted.json
-topograph convert data/source.graphml data/converted.gml --source-format graphml --target-format gml
+topographer convert data/source.pkl data/converted.json
+topographer convert data/source.graphml data/converted.gml --source-format graphml --target-format gml
 ```
 
 # References

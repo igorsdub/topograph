@@ -1,5 +1,5 @@
 [workspace]
-name = "topograph"
+name = "topographer"
 description = "Topological analysis on graphs and networks."
 version = "0.0.1"
 channels = ['conda-forge']
@@ -13,20 +13,20 @@ ruff = "*"
 pip = "*"
 
 [tasks]
-version = "topograph version"
-completion = "topograph --install-completion"
-shoot = "topograph gun shoot"
-load = "topograph gun load"
+version = "topographer version"
+completion = "topographer --install-completion"
+shoot = "topographer gun shoot"
+load = "topographer gun load"
 
 [pypi-dependencies]
 python-dotenv = "*"
 rich = "*"
 typer = "*"
 networkx = "*"
-topograph = { path = ".", editable = true }
+topographer = { path = ".", editable = true }
 
 [package]
-name = "topograph"
+name = "topographer"
 version = "0.0.1"
 
 [package.build] 

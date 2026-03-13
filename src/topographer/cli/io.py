@@ -4,9 +4,9 @@ from pathlib import Path
 
 import typer
 
-from topograph.io.convert import convert_graph
-from topograph.io.load import load_graph
-from topograph.io.save import save_graph
+from topographer.io.convert import convert_graph
+from topographer.io.load import load_graph
+from topographer.io.save import save_graph
 
 app = typer.Typer()
 

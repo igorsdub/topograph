@@ -4,8 +4,8 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from topograph.io.load import load_graph
-from topograph.io.save import save_graph
+from topographer.io.load import load_graph
+from topographer.io.save import save_graph
 
 
 def convert_graph(

@@ -3,9 +3,9 @@ import pickle
 import networkx as nx
 from typer.testing import CliRunner
 
-from topograph.cli.main import app
-from topograph.examples import easy_path_graph, invalid_missing_scalar_graph
-from topograph.io.load import load_graph
+from topographer.cli.main import app
+from topographer.examples import easy_path_graph, invalid_missing_scalar_graph
+from topographer.io.load import load_graph
 
 runner = CliRunner()
 

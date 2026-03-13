@@ -1,11 +1,11 @@
 import networkx as nx
 import pytest
 
-from topograph.core.uniqueness import (
+from topographer.core.uniqueness import (
     are_scalar_values_unique,
     assert_unique_scalar_values,
 )
-from topograph.examples import (
+from topographer.examples import (
     easy_path_graph,
     get_graph_options,
     invalid_duplicate_scalar_graph,

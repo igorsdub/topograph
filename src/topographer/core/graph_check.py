@@ -1,6 +1,6 @@
 import networkx as nx
 
-from topograph.core.uniqueness import assert_unique_scalar_values
+from topographer.core.uniqueness import assert_unique_scalar_values
 
 
 def check_graph(

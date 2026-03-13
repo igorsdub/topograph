@@ -7,8 +7,8 @@ from pathlib import Path
 import networkx as nx
 import typer
 
-from topograph.core.graph_check import check_graph
-from topograph.io.load import load_graph
+from topographer.core.graph_check import check_graph
+from topographer.io.load import load_graph
 
 
 def load_and_validate_graph_or_exit(

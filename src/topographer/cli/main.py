@@ -4,7 +4,7 @@ from pathlib import Path
 
 import typer
 
-from topograph.io.convert import convert_graph
+from topographer.io.convert import convert_graph
 
 from ..version import app as version_app
 from . import (

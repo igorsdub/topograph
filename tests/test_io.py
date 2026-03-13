@@ -4,10 +4,10 @@ import pickle
 import networkx as nx
 import pytest
 
-from topograph.examples import easy_path_graph
-from topograph.io.convert import convert_graph
-from topograph.io.load import load_graph
-from topograph.io.save import save_graph
+from topographer.examples import easy_path_graph
+from topographer.io.convert import convert_graph
+from topographer.io.load import load_graph
+from topographer.io.save import save_graph
 
 
 def _sample_graph() -> nx.Graph:

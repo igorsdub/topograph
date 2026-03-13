@@ -443,7 +443,7 @@ packages:
   size: 21453
   timestamp: 1768146676791
 - pypi: ./
-  name: topograph
+  name: topographer
   version: 0.0.1
   sha256: bef1f024fb1b438eb5fa9e856505d8c344dbe47b80a6eb982ca5f6efc777d2f8
   requires_dist:
