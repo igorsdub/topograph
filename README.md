@@ -89,27 +89,34 @@ config:
 ---
 flowchart TD
 
-A([Graph G<br/>w/ scalar function f]) --> B[Validate graph and<br/>scalar attribute]
+A([Graph G<br/>w/ scalar f]) --> B[Validate graph and<br/>scalar attribute]
 
-B --> C{Are scalar values unique?}
+B --> C{Unique scalar values?}
 
-C -->|No| D[ Perturb tied scalar values<br/>to obtain f' ]
-C -->|Yes| E([Graph G<br/>w/ scalar function f])
+C -->|Yes| F
+C -->|No| D[ Break scalar ties]
 
-D --> F([Graph G<br/>w/ perturbed scalar f'])
-E --> F
+D --> F([Graph G<br/>w/ scalar f'])
 
-F --> G[Compute split tree]
-F --> H[Compute join tree]
+F --> G[Compute split/join tree]
 
-G --> I[Compute contour tree<br/>from split and join trees]
-H --> I
+G --> G1([Split tree])
+G --> H1([Join tree])
 
-I --> J[Compute persistence<br/>of contour tree]
 
-J --> K[Compute simplification<br/>using persistence threshold]
+G1 --> I[Compute contour tree]
+H1 --> I
 
-K --> L([Simplified contour tree<br/>and persistence summary])
+I --> I1([Contour tree])
+
+I1 --> J[Compute persistence]
+
+J --> J1([Contour tree<br/>persistence])
+
+J1 --> K[Simplify]
+I1 --> K
+
+K --> L1([Simplified<br/>contour tree])
 ```
 
 ## CLI Convert Example
