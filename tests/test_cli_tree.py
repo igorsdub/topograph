@@ -31,7 +31,7 @@ def test_tree_join_command_writes_output_graph(tmp_path):
     assert out_graph.number_of_edges() > 0
 
 
-def test_tree_split_command_supports_augmented_mode(tmp_path):
+def test_augment_split_command_writes_augmented_tree(tmp_path):
     source_path = tmp_path / "input.pkl"
     output_path = tmp_path / "split_aug.pkl"
 
@@ -40,7 +40,27 @@ def test_tree_split_command_supports_augmented_mode(tmp_path):
 
     result = runner.invoke(
         app,
-        ["tree", "split", str(source_path), str(output_path), "--augmented"],
+        ["augment", "split", str(source_path), str(output_path)],
+    )
+
+    assert result.exit_code == 0
+    assert output_path.exists()
+
+    out_graph = load_graph(output_path)
+    assert out_graph.number_of_nodes() == input_graph.number_of_nodes()
+    assert out_graph.number_of_edges() == input_graph.number_of_edges()
+
+
+def test_augment_join_command_writes_augmented_tree(tmp_path):
+    source_path = tmp_path / "input.pkl"
+    output_path = tmp_path / "join_aug.pkl"
+
+    input_graph = easy_path_graph(6)
+    _write_graph(source_path, input_graph)
+
+    result = runner.invoke(
+        app,
+        ["augment", "join", str(source_path), str(output_path)],
     )
 
     assert result.exit_code == 0

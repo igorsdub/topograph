@@ -165,9 +165,9 @@ Use the staged tree commands to compute join and split trees:
 ```bash
 topographer tree join data/input.pkl data/join_tree.pkl
 topographer tree split data/input.pkl data/split_tree.pkl
-topographer tree split data/input.pkl data/split_tree_aug.pkl --augmented
+topographer augment join data/input.pkl data/join_tree_aug.pkl
+topographer augment split data/input.pkl data/split_tree_aug.pkl
 ```
-
 
 # References
 

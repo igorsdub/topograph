@@ -8,6 +8,7 @@ from topographer.io.convert import convert_graph
 
 from ..version import app as version_app
 from . import (
+    augment,
     contour_tree,
     join_tree,
     persistence,
@@ -30,6 +31,7 @@ app.add_typer(persistence.app, name="persistence")
 app.add_typer(simplify.app, name="simplify")
 app.add_typer(perturb.app, name="perturb")
 app.add_typer(tree.app, name="tree")
+app.add_typer(augment.app, name="augment")
 
 # Add run subcommand
 app.add_typer(run.app, name="run")

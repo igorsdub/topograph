@@ -1,3 +1,4 @@
+from topographer.algorithms.augmentation import augment_join_tree, augment_split_tree
 from topographer.algorithms.join_tree import compute_join_tree
 from topographer.algorithms.split_tree import compute_split_tree
 from topographer.examples import easy_path_graph
@@ -6,8 +7,8 @@ from topographer.examples import easy_path_graph
 def test_split_join_results_provide_inputs_for_contour_stage():
     graph = easy_path_graph(6)
 
-    split = compute_split_tree(graph, scalar="scalar", augmented=False)
-    join = compute_join_tree(graph, scalar="scalar", augmented=False)
+    split = compute_split_tree(graph, scalar="scalar")
+    join = compute_join_tree(graph, scalar="scalar")
 
     assert split.scalar == join.scalar == "scalar"
     assert split.root in graph.nodes
@@ -19,8 +20,8 @@ def test_split_join_results_provide_inputs_for_contour_stage():
 def test_augmented_split_join_retain_vertex_traces_for_contour_augmentation():
     graph = easy_path_graph(6)
 
-    split = compute_split_tree(graph, scalar="scalar", augmented=True)
-    join = compute_join_tree(graph, scalar="scalar", augmented=True)
+    split = augment_split_tree(compute_split_tree(graph, scalar="scalar"))
+    join = augment_join_tree(compute_join_tree(graph, scalar="scalar"))
 
     assert split.arc_vertices
     assert join.arc_vertices

@@ -31,7 +31,6 @@ def _new_tree() -> nx.Graph[Any]:
 
 @dataclass(slots=True)
 class SweepContext:
-    augmented: bool = False
     tree: nx.Graph[Any] = field(default_factory=_new_tree)
     uf: UnionFind = field(default_factory=UnionFind)
     component_head: dict[Hashable, Hashable] = field(default_factory=_new_component_head)
@@ -56,17 +55,10 @@ def _add_arc(
     middle = intermediates if intermediates is not None else []
     path = [start, *middle, end]
 
-    if context.augmented:
-        if len(path) == 1:
-            context.tree.add_node(path[0])
-        else:
-            for i in range(len(path) - 1):
-                context.tree.add_edge(path[i], path[i + 1])
+    if start != end:
+        context.tree.add_edge(start, end)
     else:
-        if start != end:
-            context.tree.add_edge(start, end)
-        else:
-            context.tree.add_node(start)
+        context.tree.add_node(start)
 
     if start != end:
         context.arc_vertices[_edge_key(start, end)] = path

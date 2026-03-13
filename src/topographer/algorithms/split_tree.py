@@ -18,12 +18,11 @@ def compute_split_tree(
     G: nx.Graph,
     scalar: str = "scalar",
     *,
-    augmented: bool = False,
     require_connected: bool = True,
 ) -> SplitTreeResult:
     check_graph(G, scalar_attr=scalar, require_connected=require_connected)
 
-    context = SweepContext(augmented=augmented)
+    context = SweepContext()
 
     def _visit(node: Hashable, seen: set[Hashable]):
         seen_neighbors = [neighbor for neighbor in G.neighbors(node) if neighbor in seen]
@@ -44,7 +43,7 @@ def compute_split_tree(
         root=root,
         critical_nodes=critical_nodes,
         scalar=scalar,
-        augmented=augmented,
+        augmented=False,
         arc_vertices=context.arc_vertices,
     )
 
