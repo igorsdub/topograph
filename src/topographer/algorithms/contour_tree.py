@@ -8,12 +8,12 @@ from topographer.algorithms.contour_merge import merge_split_join_trees
 from topographer.algorithms.degree_reduction import reduce_degree_two_nodes
 from topographer.algorithms.join_tree import compute_join_tree
 from topographer.algorithms.split_tree import compute_split_tree
-from topographer.models.tree import ContourTree, JoinTree, SplitTree
+from topographer.models.tree import ContourTree, MergeTree
 
 
 def compute_contour_tree_from_split_join(
-    ST: SplitTree,
-    JT: JoinTree,
+    ST: MergeTree,
+    JT: MergeTree,
 ) -> ContourTree:
     """Merge split and join trees and reduce degree-2 regular nodes.
 

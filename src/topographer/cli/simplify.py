@@ -22,8 +22,9 @@ def threshold(
 ):
     """Simplify contour-tree context using a persistence threshold.
 
-    The command computes CT context from input graph, simplifies JT and ST
-    separately with ``epsilon``, then recomputes and saves the simplified CT.
+    The command computes contour-tree context from input graph, simplifies the
+    join/split merge-tree context with ``epsilon``, then recomputes and saves
+    the simplified contour tree.
     """
     graph = load_and_validate_graph_or_exit(input_file, scalar_attr=scalar)
     contour_tree = compute_contour_tree(graph, scalar=scalar)

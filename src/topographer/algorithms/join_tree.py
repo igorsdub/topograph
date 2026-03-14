@@ -13,7 +13,7 @@ from topographer.algorithms._merge_rules import (
 )
 from topographer.algorithms._sweep import sweep_ascending
 from topographer.core.graph_check import check_graph
-from topographer.models.tree import JoinTree
+from topographer.models.tree import MergeTree
 
 
 def compute_join_tree(
@@ -21,7 +21,7 @@ def compute_join_tree(
     scalar: str = "scalar",
     *,
     require_connected: bool = True,
-) -> JoinTree:
+) -> MergeTree:
     """Compute the join tree using an ascending scalar sweep.
 
     Nodes are visited from low to high scalar value. Component merges and join
@@ -45,11 +45,12 @@ def compute_join_tree(
         node: {scalar: G.nodes[node][scalar]} for node in context.tree.nodes() if node in G.nodes
     }
 
-    return JoinTree(
+    return MergeTree(
         graph=context.tree,
         root=root,
         critical_nodes=critical_nodes,
         scalar=scalar,
+        kind="join",
         augmented=False,
         arc_vertices=context.arc_vertices,
         node_metadata=node_metadata,

@@ -13,7 +13,7 @@ from topographer.algorithms._merge_rules import (
 )
 from topographer.algorithms._sweep import sweep_descending
 from topographer.core.graph_check import check_graph
-from topographer.models.tree import SplitTree
+from topographer.models.tree import MergeTree
 
 
 def compute_split_tree(
@@ -21,7 +21,7 @@ def compute_split_tree(
     scalar: str = "scalar",
     *,
     require_connected: bool = True,
-) -> SplitTree:
+) -> MergeTree:
     """Compute the split tree using a descending scalar sweep.
 
     Nodes are visited from high to low scalar value. Component merges and split
@@ -49,11 +49,12 @@ def compute_split_tree(
         node: {scalar: G.nodes[node][scalar]} for node in context.tree.nodes() if node in G.nodes
     }
 
-    return SplitTree(
+    return MergeTree(
         graph=context.tree,
         root=root,
         critical_nodes=critical_nodes,
         scalar=scalar,
+        kind="split",
         augmented=False,
         arc_vertices=context.arc_vertices,
         node_metadata=node_metadata,

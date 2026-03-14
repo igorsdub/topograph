@@ -8,6 +8,7 @@ from topographer.algorithms.persistence import (
 )
 from topographer.algorithms.split_tree import compute_split_tree
 from topographer.examples import easy_path_graph
+from topographer.models.tree import MergeTree
 
 
 def test_compute_persistence_from_split_join_on_path_graph():
@@ -15,6 +16,11 @@ def test_compute_persistence_from_split_join_on_path_graph():
     graph = easy_path_graph(6)
     ST = compute_split_tree(graph, scalar="scalar")
     JT = compute_join_tree(graph, scalar="scalar")
+
+    assert isinstance(ST, MergeTree)
+    assert isinstance(JT, MergeTree)
+    assert ST.kind == "split"
+    assert JT.kind == "join"
 
     result = compute_persistence_from_split_join(ST, JT)
 

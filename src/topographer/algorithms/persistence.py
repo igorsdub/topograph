@@ -6,7 +6,7 @@ from collections.abc import Hashable
 
 from topographer.algorithms.contour_tree import compute_contour_tree_from_split_join
 from topographer.models.persistence import PersistencePair, PersistenceResult
-from topographer.models.tree import ContourTree, JoinTree, SplitTree
+from topographer.models.tree import ContourTree, MergeTree
 
 
 def _scalar_for_node(CT: ContourTree, node: Hashable) -> float:
@@ -52,8 +52,8 @@ def _pairs_from_contour_tree(CT: ContourTree) -> list[PersistencePair]:
 
 
 def compute_persistence_from_split_join(
-    ST: SplitTree,
-    JT: JoinTree,
+    ST: MergeTree,
+    JT: MergeTree,
 ) -> PersistenceResult:
     """Compute persistence by first building a contour tree from split/join trees."""
     if ST.scalar != JT.scalar:

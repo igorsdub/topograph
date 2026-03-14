@@ -184,18 +184,18 @@ CT = compute_contour_tree(graph, scalar="scalar")
 aCT = augment_contour_tree(CT)
 ```
 
-`CT` is a rich wrapper object with graph topology plus split/join context:
+`CT` is a rich wrapper object with graph topology plus split/join merge-tree context:
 
 - `CT.graph`: contour tree topology (`nx.Graph`)
-- `CT.JT` / `CT.join_tree`: join tree wrapper
-- `CT.ST` / `CT.split_tree`: split tree wrapper
+- `CT.JT` / `CT.join_tree`: join-oriented `MergeTree` (`kind == "join"`)
+- `CT.ST` / `CT.split_tree`: split-oriented `MergeTree` (`kind == "split"`)
 - `CT.scalar`: scalar attribute name
 
 ## Persistence
 
 Persistence is available via two explicit paths:
 
-- split/join first, then persistence
+- split/join merge trees first, then persistence
 - contour tree wrapper, then persistence
 
 CLI usage:
@@ -216,9 +216,9 @@ from topographer.algorithms.persistence import (
 )
 from topographer.algorithms.split_tree import compute_split_tree
 
-ST = compute_split_tree(graph, scalar="scalar")
-JT = compute_join_tree(graph, scalar="scalar")
-pairs_split_join = compute_persistence_from_split_join(ST, JT)
+split_tree = compute_split_tree(graph, scalar="scalar")
+join_tree = compute_join_tree(graph, scalar="scalar")
+pairs_split_join = compute_persistence_from_split_join(split_tree, join_tree)
 
 CT = compute_contour_tree(graph, scalar="scalar")
 pairs_contour = compute_persistence_from_contour_tree(CT)
@@ -228,9 +228,9 @@ pairs_contour = compute_persistence_from_contour_tree(CT)
 
 Simplification mirrors TTK-style orchestration:
 
-- simplify `JT` with a persistence threshold
-- simplify `ST` with the same threshold
-- recompute `CT` from the simplified `JT` and `ST`
+- simplify join-oriented `MergeTree` context with a persistence threshold
+- simplify split-oriented `MergeTree` context with the same threshold
+- recompute `CT` from the simplified split/join merge-tree context
 
 CLI usage:
 

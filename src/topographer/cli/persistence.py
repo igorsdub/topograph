@@ -40,18 +40,18 @@ def compute(
 ):
     """Compute persistence pairs and write them as JSON output.
 
-    The command supports two modes: building pairs from split/join trees or
-    from a computed contour tree.
+    The command supports two modes: building pairs from split/join merge trees
+    or from a computed contour tree.
     """
     graph = load_and_validate_graph_or_exit(input_file, scalar_attr=scalar)
 
     if mode is PersistenceMode.split_join:
-        ST = compute_split_tree(graph, scalar=scalar)
-        JT = compute_join_tree(graph, scalar=scalar)
-        result = compute_persistence_from_split_join(ST, JT)
+        split_tree = compute_split_tree(graph, scalar=scalar)
+        join_tree = compute_join_tree(graph, scalar=scalar)
+        result = compute_persistence_from_split_join(split_tree, join_tree)
     else:
-        CT = compute_contour_tree(graph, scalar=scalar)
-        result = compute_persistence_from_contour_tree(CT)
+        contour_tree = compute_contour_tree(graph, scalar=scalar)
+        result = compute_persistence_from_contour_tree(contour_tree)
 
     payload = result.to_dict()
     payload["mode"] = mode.value

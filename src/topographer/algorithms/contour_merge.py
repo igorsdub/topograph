@@ -6,7 +6,7 @@ from collections.abc import Hashable
 
 import networkx as nx
 
-from topographer.models.tree import JoinTree, SplitTree
+from topographer.models.tree import MergeTree
 
 
 def _edge_key(a: Hashable, b: Hashable) -> tuple[Hashable, Hashable]:
@@ -28,8 +28,8 @@ def _canonicalize_path(path: list[Hashable]) -> list[Hashable]:
 
 
 def merge_split_join_trees(
-    ST: SplitTree,
-    JT: JoinTree,
+    ST: MergeTree,
+    JT: MergeTree,
 ) -> tuple[nx.Graph, dict[tuple[Hashable, Hashable], list[Hashable]]]:
     """Merge split and join tree edges and reconcile arc vertex paths.
 

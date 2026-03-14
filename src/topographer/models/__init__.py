@@ -8,14 +8,18 @@ from topographer.models.tree import (
     ContourTreeResult,
     JoinTree,
     JoinTreeResult,
+    MergeTree,
+    MergeTreeResult,
     SplitTree,
     SplitTreeResult,
 )
 
 __all__ = [
+    "MergeTree",
     "SplitTree",
     "JoinTree",
     "ContourTree",
+    "MergeTreeResult",
     "SplitTreeResult",
     "JoinTreeResult",
     "ContourTreeResult",

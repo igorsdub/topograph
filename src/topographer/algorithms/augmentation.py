@@ -7,7 +7,7 @@ from typing import Any
 
 import networkx as nx
 
-from topographer.models.tree import ContourTree, JoinTree, SplitTree
+from topographer.models.tree import ContourTree, MergeTree
 
 
 def augment_tree_from_arc_vertices(
@@ -30,30 +30,38 @@ def augment_tree_from_arc_vertices(
     return augmented_tree
 
 
-def augment_join_tree(result: JoinTree) -> JoinTree:
+def augment_join_tree(result: MergeTree) -> MergeTree:
     """Return a join tree whose graph contains all intermediate arc vertices."""
+    if result.kind != "join":
+        raise ValueError("augment_join_tree expects a join merge tree")
+
     augmented_tree = augment_tree_from_arc_vertices(result.arc_vertices)
 
-    return JoinTree(
+    return MergeTree(
         graph=augmented_tree,
         root=result.root,
         critical_nodes=result.critical_nodes,
         scalar=result.scalar,
+        kind=result.kind,
         augmented=True,
         arc_vertices=result.arc_vertices,
         node_metadata=result.node_metadata,
     )
 
 
-def augment_split_tree(result: SplitTree) -> SplitTree:
+def augment_split_tree(result: MergeTree) -> MergeTree:
     """Return a split tree whose graph contains all intermediate arc vertices."""
+    if result.kind != "split":
+        raise ValueError("augment_split_tree expects a split merge tree")
+
     augmented_tree = augment_tree_from_arc_vertices(result.arc_vertices)
 
-    return SplitTree(
+    return MergeTree(
         graph=augmented_tree,
         root=result.root,
         critical_nodes=result.critical_nodes,
         scalar=result.scalar,
+        kind=result.kind,
         augmented=True,
         arc_vertices=result.arc_vertices,
         node_metadata=result.node_metadata,

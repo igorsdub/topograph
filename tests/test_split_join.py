@@ -2,6 +2,7 @@ from topographer.algorithms.augmentation import augment_join_tree, augment_split
 from topographer.algorithms.join_tree import compute_join_tree
 from topographer.algorithms.split_tree import compute_split_tree
 from topographer.examples import easy_star_graph
+from topographer.models.tree import MergeTree
 
 
 def test_split_and_join_tree_are_symmetric_on_star_graph():
@@ -11,6 +12,11 @@ def test_split_and_join_tree_are_symmetric_on_star_graph():
     split = compute_split_tree(graph, scalar="scalar")
     join = compute_join_tree(graph, scalar="scalar")
 
+    assert isinstance(split, MergeTree)
+    assert isinstance(join, MergeTree)
+    assert split.__class__ is join.__class__
+    assert split.kind == "split"
+    assert join.kind == "join"
     assert split.scalar == join.scalar == "scalar"
     assert split.root == min(graph.nodes())
     assert join.root == max(graph.nodes())

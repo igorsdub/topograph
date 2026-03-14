@@ -10,6 +10,7 @@ from topographer.algorithms.degree_reduction import reduce_degree_two_nodes
 from topographer.algorithms.join_tree import compute_join_tree
 from topographer.algorithms.split_tree import compute_split_tree
 from topographer.examples import easy_path_graph, easy_star_graph
+from topographer.models.tree import MergeTree
 
 
 def test_merge_split_join_trees_combines_edges_and_traces():
@@ -54,6 +55,10 @@ def test_compute_contour_tree_from_split_join_returns_non_augmented_tree():
     JT = compute_join_tree(graph, scalar="scalar")
     CT = compute_contour_tree_from_split_join(ST, JT)
 
+    assert isinstance(ST, MergeTree)
+    assert isinstance(JT, MergeTree)
+    assert ST.kind == "split"
+    assert JT.kind == "join"
     assert CT.scalar == "scalar"
     assert CT.augmented is False
     assert CT.graph.number_of_nodes() > 0

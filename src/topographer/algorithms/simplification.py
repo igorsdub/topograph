@@ -9,14 +9,11 @@ The implementation follows a TTK-style orchestration:
 """
 
 from collections.abc import Hashable
-from typing import TypeVar
 
 import networkx as nx
 
 from topographer.algorithms.contour_tree import compute_contour_tree_from_split_join
-from topographer.models.tree import ContourTree, JoinTree, SplitTree
-
-SplitJoinTree = TypeVar("SplitJoinTree", SplitTree, JoinTree)
+from topographer.models.tree import ContourTree, MergeTree
 
 
 def _edge_key(a: Hashable, b: Hashable) -> tuple[Hashable, Hashable]:
@@ -25,7 +22,7 @@ def _edge_key(a: Hashable, b: Hashable) -> tuple[Hashable, Hashable]:
     return ordered[0], ordered[1]
 
 
-def _scalar_for_node(tree: SplitTree | JoinTree, node: Hashable) -> float:
+def _scalar_for_node(tree: MergeTree, node: Hashable) -> float:
     """Fetch scalar metadata for a tree node as ``float``."""
     metadata = tree.node_metadata.get(node)
     if metadata is None or tree.scalar not in metadata:
@@ -56,7 +53,7 @@ def _get_arc_path(
 def _lowest_leaf_arc_below_threshold(
     graph: nx.Graph,
     root: Hashable | None,
-    tree: SplitTree | JoinTree,
+    tree: MergeTree,
     threshold: float,
 ) -> tuple[Hashable, Hashable] | None:
     """Pick the lowest-persistence leaf arc with persistence strictly below threshold.
@@ -85,12 +82,12 @@ def _lowest_leaf_arc_below_threshold(
     return best[3], best[4]
 
 
-def _sorted_critical_nodes(tree: SplitTree | JoinTree, graph: nx.Graph) -> list[Hashable]:
+def _sorted_critical_nodes(tree: MergeTree, graph: nx.Graph) -> list[Hashable]:
     """Sort surviving nodes by scalar in tree-consistent order.
 
     Join trees sort ascending, split trees sort descending.
     """
-    reverse = isinstance(tree, SplitTree)
+    reverse = tree.kind == "split"
     return sorted(
         graph.nodes(),
         key=lambda node: _scalar_for_node(tree, node),
@@ -98,7 +95,7 @@ def _sorted_critical_nodes(tree: SplitTree | JoinTree, graph: nx.Graph) -> list[
     )
 
 
-def _simplify_tree(tree: SplitJoinTree, threshold: float) -> SplitJoinTree:
+def _simplify_tree(tree: MergeTree, threshold: float) -> MergeTree:
     """Simplify one split/join tree via iterative leaf-arc pruning.
 
     At each iteration the algorithm removes the leaf arc with minimum persistence
@@ -121,6 +118,7 @@ def _simplify_tree(tree: SplitJoinTree, threshold: float) -> SplitJoinTree:
         root=tree.root,
         critical_nodes=list(tree.critical_nodes),
         scalar=tree.scalar,
+        kind=tree.kind,
         augmented=tree.augmented,
         arc_vertices=simplified_arc_vertices,
         node_metadata=simplified_node_metadata,
@@ -173,19 +171,24 @@ def _simplify_tree(tree: SplitJoinTree, threshold: float) -> SplitJoinTree:
         root=tree.root if tree.root in simplified_graph else None,
         critical_nodes=critical_nodes,
         scalar=tree.scalar,
+        kind=tree.kind,
         augmented=tree.augmented,
         arc_vertices=simplified_arc_vertices,
         node_metadata=simplified_node_metadata,
     )
 
 
-def simplify_join_tree(tree: JoinTree, threshold: float) -> JoinTree:
+def simplify_join_tree(tree: MergeTree, threshold: float) -> MergeTree:
     """Simplify a join tree with a persistence threshold."""
+    if tree.kind != "join":
+        raise ValueError("simplify_join_tree expects a join merge tree")
     return _simplify_tree(tree, threshold)
 
 
-def simplify_split_tree(tree: SplitTree, threshold: float) -> SplitTree:
+def simplify_split_tree(tree: MergeTree, threshold: float) -> MergeTree:
     """Simplify a split tree with a persistence threshold."""
+    if tree.kind != "split":
+        raise ValueError("simplify_split_tree expects a split merge tree")
     return _simplify_tree(tree, threshold)
 
 
