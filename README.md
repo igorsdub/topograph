@@ -191,6 +191,30 @@ aCT = augment_contour_tree(CT)
 - `CT.ST` / `CT.split_tree`: split-oriented `MergeTree` (`kind == "split"`)
 - `CT.scalar`: scalar attribute name
 
+## Planar Tree Layout
+
+Tree plotting layout is available for graphs with scalar node values:
+
+- `planar_layout(tree, ...)` computes node coordinates
+- `assign_planar_layout(tree, ...)` computes coordinates and writes them to node attributes
+
+CLI usage:
+
+```bash
+topographer tree layout data/tree.pkl data/tree_layout.pkl
+topographer tree layout data/tree.pkl data/tree_layout.pkl --scalar scalar --x-mode leaf_span
+topographer tree layout data/tree.pkl data/tree_layout.pkl --root 0 --x-attr x --y-attr y --pos-attr pos
+```
+
+API usage:
+
+```python
+from topographer import assign_planar_layout, planar_layout
+
+pos = planar_layout(tree, scalar="scalar")
+assign_planar_layout(tree, scalar="scalar", x_attr="layout_x", y_attr="layout_y")
+```
+
 ## Persistence
 
 Persistence is available via two explicit paths:

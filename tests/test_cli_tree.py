@@ -1,5 +1,6 @@
 import pickle
 
+import networkx as nx
 from typer.testing import CliRunner
 
 from topographer.cli.main import app
@@ -151,3 +152,47 @@ def test_augment_contour_command_writes_augmented_tree(tmp_path):
     out_graph = load_graph(output_path)
     assert out_graph.number_of_nodes() == input_graph.number_of_nodes()
     assert out_graph.number_of_edges() == input_graph.number_of_edges()
+
+
+def test_tree_layout_command_writes_layout_attributes(tmp_path):
+    """Ensure tree layout command computes and saves planar node coordinates."""
+    source_path = tmp_path / "tree.pkl"
+    output_path = tmp_path / "tree_layout.pkl"
+
+    input_graph = easy_path_graph(6)
+    _write_graph(source_path, input_graph)
+
+    result = runner.invoke(
+        app,
+        ["tree", "layout", str(source_path), str(output_path)],
+    )
+
+    assert result.exit_code == 0
+    assert output_path.exists()
+    assert "Computed tree layout" in result.stdout
+
+    out_graph = load_graph(output_path)
+    for node in out_graph.nodes:
+        assert "layout_x" in out_graph.nodes[node]
+        assert "layout_y" in out_graph.nodes[node]
+        assert "pos" in out_graph.nodes[node]
+
+
+def test_tree_layout_command_rejects_non_tree_graph(tmp_path):
+    """Check tree layout command fails clearly when graph is not a tree."""
+    source_path = tmp_path / "cycle.pkl"
+    output_path = tmp_path / "cycle_layout.pkl"
+
+    graph = nx.cycle_graph(4)
+    for node in graph.nodes:
+        graph.nodes[node]["scalar"] = float(node)
+
+    _write_graph(source_path, graph)
+
+    result = runner.invoke(
+        app,
+        ["tree", "layout", str(source_path), str(output_path)],
+    )
+
+    assert result.exit_code == 1
+    assert "connected acyclic graph" in result.stdout
