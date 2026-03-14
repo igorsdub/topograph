@@ -298,6 +298,38 @@ CT = compute_contour_tree(graph, scalar="scalar")
 CT_simplified = simplify_contour_tree(CT, threshold=0.5)
 ```
 
+## Example
+
+Run the end-to-end medium example (graph checks, scalar tie handling,
+split/join tree, contour tree, persistence, simplification, and visualization)
+from the command line:
+
+```bash
+topographer example
+```
+
+If you are using Pixi:
+
+```bash
+pixi run topographer example
+```
+
+The script prints a stage summary and writes figures to:
+
+- `examples/output/medium_workflow/original_graph.svg`
+- `examples/output/medium_workflow/split_tree.svg`
+- `examples/output/medium_workflow/join_tree.svg`
+- `examples/output/medium_workflow/contour_tree.svg`
+- `examples/output/medium_workflow/contour_tree_simplified.svg`
+- `examples/output/medium_workflow/persistence_diagram.svg`
+- `examples/output/medium_workflow/persistence_diagram_simplified.svg`
+
+For package/API usage, see:
+
+- `topographer.workflows.run_medium_example_pipeline`
+- `topographer.workflows.create_pipeline_figures`
+- `topographer.plotting.plot_persistence_diagram`
+
 # References
 
 ## Package Building

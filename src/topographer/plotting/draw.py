@@ -114,6 +114,7 @@ def draw_tree(
     show_regular: bool = False,
     scalar_attr: str = "scalar",
     label_attr: str | None = None,
+    show_scalar_axis: bool = False,
     style: Mapping[str, Any] = CONTOUR_STYLE,
 ) -> tuple[Any, Any]:
     """Draw a tree with planar contour-style defaults."""
@@ -147,7 +148,25 @@ def draw_tree(
     if with_labels:
         annotate_nodes(graph, resolved_pos, ax=ax, label_attr=label_attr, style=style)
 
-    ax.set_axis_off()
+    if show_scalar_axis:
+        y_values = [coord[1] for coord in resolved_pos.values()]
+        if y_values:
+            y_min = min(y_values)
+            y_max = max(y_values)
+            if y_min == y_max:
+                y_min -= 0.5
+                y_max += 0.5
+            padding = max((y_max - y_min) * 0.05, 1e-6)
+            ax.set_ylim(y_min - padding, y_max + padding)
+
+        ax.get_xaxis().set_visible(False)
+        ax.spines["top"].set_visible(False)
+        ax.spines["right"].set_visible(False)
+        ax.spines["bottom"].set_visible(False)
+        ax.set_ylabel(f"{scalar_attr} value")
+    else:
+        ax.set_axis_off()
+
     ax.set_title("Tree plot")
     return fig, ax
 
@@ -159,6 +178,7 @@ def plot_tree(
     ax: Any | None = None,
     with_labels: bool = False,
     show_regular: bool = False,
+    show_scalar_axis: bool = False,
 ) -> tuple[Any, Any]:
     """Convenience wrapper: compute planar layout and draw the tree."""
     pos = planar_layout(tree, scalar=scalar_attr)
@@ -169,6 +189,7 @@ def plot_tree(
         with_labels=with_labels,
         show_regular=show_regular,
         scalar_attr=scalar_attr,
+        show_scalar_axis=show_scalar_axis,
     )
 
 

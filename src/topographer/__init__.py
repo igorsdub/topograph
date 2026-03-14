@@ -18,8 +18,16 @@ from topographer.plotting import (
     assign_planar_layout,
     draw_tree,
     planar_layout,
+    plot_persistence_diagram,
     plot_tree,
     save_figure,
+)
+from topographer.workflows import (
+    create_pipeline_figures,
+    medium_example_graph,
+    run_contour_pipeline,
+    run_medium_example_pipeline,
+    save_pipeline_figures,
 )
 
 __all__ = [
@@ -37,5 +45,11 @@ __all__ = [
     "assign_planar_layout",
     "draw_tree",
     "plot_tree",
+    "plot_persistence_diagram",
     "save_figure",
+    "medium_example_graph",
+    "run_contour_pipeline",
+    "run_medium_example_pipeline",
+    "create_pipeline_figures",
+    "save_pipeline_figures",
 ]

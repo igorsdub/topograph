@@ -5,6 +5,11 @@ from pathlib import Path
 import typer
 
 from topographer.io.convert import convert_graph
+from topographer.workflows import (
+    create_pipeline_figures,
+    run_medium_example_pipeline,
+    save_pipeline_figures,
+)
 
 from ..version import app as version_app
 from . import (
@@ -60,3 +65,37 @@ def convert(
         target_format=target_format,
     )
     typer.echo(f"Converted graph: {source_path} -> {target_path}")
+
+
+@app.command()
+def example(
+    output_dir: Path = typer.Option(
+        Path("examples/output/medium_workflow"),
+        "--output-dir",
+        help="Directory where workflow figures will be saved.",
+    ),
+    threshold: float = typer.Option(
+        4.0,
+        "--threshold",
+        help="Persistence simplification threshold.",
+    ),
+    format: str = typer.Option(
+        "svg",
+        "--format",
+        help="Figure format: png, pdf, svg, html.",
+    ),
+    with_labels: bool = typer.Option(
+        True,
+        "--with-labels/--no-labels",
+        help="Whether to annotate node labels on tree plots.",
+    ),
+) -> None:
+    """Run the built-in medium end-to-end contour workflow example."""
+    artifacts = run_medium_example_pipeline(simplification_threshold=threshold)
+    figures = create_pipeline_figures(artifacts, with_labels=with_labels)
+    output_paths = save_pipeline_figures(figures, output_dir=output_dir, format=format)
+
+    typer.echo("Ran medium workflow example")
+    typer.echo(f"Output directory: {output_dir}")
+    for name, path in sorted(output_paths.items()):
+        typer.echo(f"  - {name}: {path}")

@@ -2,6 +2,7 @@ import json
 import pickle
 
 import networkx as nx
+import pytest
 from typer.testing import CliRunner
 
 from topographer.cli.main import app
@@ -207,3 +208,38 @@ def test_simplify_threshold_command_writes_simplified_contour_tree(tmp_path):
     out_graph = load_graph(output_path)
     assert out_graph.number_of_nodes() > 0
     assert out_graph.number_of_edges() > 0
+
+
+def test_example_command_runs_medium_workflow_and_writes_figures(tmp_path):
+    """Ensure top-level example command runs and saves all expected workflow plots."""
+    matplotlib = pytest.importorskip("matplotlib")
+    matplotlib.use("Agg")
+
+    output_dir = tmp_path / "medium_workflow"
+
+    result = runner.invoke(
+        app,
+        [
+            "example",
+            "--output-dir",
+            str(output_dir),
+            "--format",
+            "svg",
+        ],
+    )
+
+    assert result.exit_code == 0
+    assert "Ran medium workflow example" in result.stdout
+
+    expected = {
+        "original_graph.svg",
+        "split_tree.svg",
+        "join_tree.svg",
+        "contour_tree.svg",
+        "contour_tree_simplified.svg",
+        "persistence_diagram.svg",
+        "persistence_diagram_simplified.svg",
+    }
+
+    produced = {path.name for path in output_dir.glob("*.svg")}
+    assert expected.issubset(produced)

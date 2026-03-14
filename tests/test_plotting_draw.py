@@ -7,6 +7,7 @@ import pytest
 
 from topographer.models.tree import MergeTree
 from topographer.plotting import draw_tree, planar_layout, save_figure
+from topographer.plotting.styles import CONTOUR_STYLE
 
 
 def _tree_graph() -> nx.Graph[str]:
@@ -76,3 +77,22 @@ def test_save_figure_rejects_unknown_format(tmp_path: Path) -> None:
 
     with pytest.raises(ValueError, match="Unsupported figure format"):
         save_figure(fig, tmp_path / "tree_plot.bmp")
+
+
+def test_draw_tree_can_show_scalar_side_axis() -> None:
+    matplotlib = pytest.importorskip("matplotlib")
+    matplotlib.use("Agg")
+    pytest.importorskip("matplotlib.pyplot")
+
+    graph = _tree_graph()
+    fig, ax = draw_tree(graph, show_scalar_axis=True, scalar_attr="scalar")
+
+    assert ax.get_ylabel() == "scalar value"
+    assert ax.xaxis.get_visible() is False
+    assert fig is not None
+
+
+def test_critical_marker_shapes_match_spec() -> None:
+    assert CONTOUR_STYLE["minima"]["marker"] == "o"
+    assert CONTOUR_STYLE["maxima"]["marker"] == "^"
+    assert CONTOUR_STYLE["saddles"]["marker"] == "D"
