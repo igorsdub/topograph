@@ -1,6 +1,6 @@
-from __future__ import annotations
-
 """Merge split and join trees into a combined contour-tree skeleton."""
+
+from __future__ import annotations
 
 from collections.abc import Hashable
 
@@ -42,13 +42,16 @@ def merge_split_join_trees(
     merged_tree = nx.Graph()
     merged_tree.add_nodes_from(ST.tree.nodes())
     merged_tree.add_nodes_from(JT.tree.nodes())
-    merged_tree.add_edges_from(_edge_key(a, b) for a, b in ST.tree.edges())
-    merged_tree.add_edges_from(_edge_key(a, b) for a, b in JT.tree.edges())
 
+    edge_support: dict[tuple[Hashable, Hashable], int] = {}
     merged_arc_vertices: dict[tuple[Hashable, Hashable], list[Hashable]] = {}
 
-    for source in (ST.arc_vertices, JT.arc_vertices):
-        for edge, path in source.items():
+    for source_graph, source_arcs in ((ST.tree, ST.arc_vertices), (JT.tree, JT.arc_vertices)):
+        for edge in source_graph.edges():
+            key = _edge_key(edge[0], edge[1])
+            edge_support[key] = edge_support.get(key, 0) + 1
+
+        for edge, path in source_arcs.items():
             key = _edge_key(edge[0], edge[1])
             canonical_path = _canonicalize_path(path)
 
@@ -56,10 +59,42 @@ def merge_split_join_trees(
             if existing is None or len(canonical_path) > len(existing):
                 merged_arc_vertices[key] = canonical_path
 
+    for edge in edge_support:
+        if edge not in merged_arc_vertices:
+            merged_arc_vertices[edge] = [edge[0], edge[1]]
+
+    ranked_edges = sorted(
+        edge_support,
+        key=lambda edge: (
+            edge_support[edge],
+            len(merged_arc_vertices.get(edge, [edge[0], edge[1]])),
+            repr(edge[0]),
+            repr(edge[1]),
+        ),
+        reverse=True,
+    )
+
+    uf = nx.utils.UnionFind()
+
+    for node in merged_tree.nodes():
+        uf[node]
+
+    for edge in ranked_edges:
+        a, b = edge
+        if uf[a] == uf[b]:
+            continue
+        merged_tree.add_edge(a, b)
+        uf.union(a, b)
+
+    merged_arc_vertices = {
+        key: merged_arc_vertices[key]
+        for key in list(merged_arc_vertices.keys())
+        if merged_tree.has_edge(*key)
+    }
+
     for edge in merged_tree.edges():
         key = _edge_key(edge[0], edge[1])
-        if key not in merged_arc_vertices:
-            merged_arc_vertices[key] = [key[0], key[1]]
+        merged_arc_vertices.setdefault(key, [key[0], key[1]])
 
     return merged_tree, merged_arc_vertices
 

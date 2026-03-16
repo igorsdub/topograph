@@ -2,7 +2,9 @@ from __future__ import annotations
 
 import pytest
 
+from topographer.algorithms.augmentation import augment_contour_tree
 from topographer.core.uniqueness import are_scalar_values_unique
+from topographer.examples import easy_path_graph
 from topographer.workflows import (
     create_pipeline_figures,
     medium_example_graph,
@@ -55,3 +57,27 @@ def test_create_pipeline_figures_returns_expected_keys() -> None:
     contour_axes = figures["contour_tree"].axes
     assert contour_axes
     assert contour_axes[0].get_ylabel() == "scalar value"
+
+
+def test_create_pipeline_figures_deaugments_contour_tree_for_plotting(monkeypatch) -> None:
+    matplotlib = pytest.importorskip("matplotlib")
+    matplotlib.use("Agg")
+    pytest.importorskip("matplotlib.pyplot")
+
+    artifacts = run_contour_pipeline(easy_path_graph(6), simplification_threshold=1.5)
+    artifacts.contour_tree = augment_contour_tree(artifacts.contour_tree)
+
+    called = {"value": False}
+
+    def _spy_deaugment(tree):
+        called["value"] = True
+        return tree
+
+    monkeypatch.setattr(
+        "topographer.workflows.contour_pipeline.deaugment_contour_tree",
+        _spy_deaugment,
+    )
+
+    create_pipeline_figures(artifacts, with_labels=False, show_regular=False)
+
+    assert called["value"] is True

@@ -9,7 +9,7 @@ def test_compute_join_tree_non_augmented_path_graph():
     """Check join-tree computation returns expected critical structure on a path."""
     graph = easy_path_graph(6)
 
-    result = compute_join_tree(graph, scalar="scalar")
+    result = compute_join_tree(graph, scalar="scalar", augment=False)
 
     assert result.root == 5
     assert result.scalar == "scalar"
@@ -23,7 +23,7 @@ def test_compute_split_tree_non_augmented_path_graph():
     """Check split-tree computation returns expected critical structure on a path."""
     graph = easy_path_graph(6)
 
-    result = compute_split_tree(graph, scalar="scalar")
+    result = compute_split_tree(graph, scalar="scalar", augment=False)
 
     assert result.root == 0
     assert result.scalar == "scalar"
@@ -38,7 +38,7 @@ def test_augment_join_tree_keeps_all_vertices():
     """Verify join-tree augmentation restores intermediate arc vertices."""
     graph = easy_path_graph(6)
 
-    result = compute_join_tree(graph, scalar="scalar")
+    result = compute_join_tree(graph, scalar="scalar", augment=False)
     augmented = augment_join_tree(result)
 
     assert set(graph.nodes()).issubset(augmented.tree.nodes())
@@ -50,7 +50,7 @@ def test_augment_split_tree_keeps_all_vertices():
     """Verify split-tree augmentation restores intermediate arc vertices."""
     graph = easy_path_graph(6)
 
-    result = compute_split_tree(graph, scalar="scalar")
+    result = compute_split_tree(graph, scalar="scalar", augment=False)
     augmented = augment_split_tree(result)
 
     assert set(graph.nodes()).issubset(augmented.tree.nodes())
@@ -66,6 +66,17 @@ def test_split_join_support_disconnected_when_requested(fn):
     result = fn(graph, scalar="scalar", require_connected=False)
 
     assert result.tree.number_of_nodes() > 0
+
+
+@pytest.mark.parametrize("fn", [compute_join_tree, compute_split_tree])
+def test_split_join_are_augmented_by_default(fn):
+    """Split/join trees are augmented by default to preserve full vertex correspondence."""
+    graph = easy_path_graph(6)
+
+    result = fn(graph, scalar="scalar")
+
+    assert result.augmented is True
+    assert set(graph.nodes()).issubset(result.tree.nodes())
 
 
 @pytest.mark.parametrize("fn", [compute_join_tree, compute_split_tree])

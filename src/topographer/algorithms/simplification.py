@@ -159,10 +159,8 @@ def _simplify_tree(tree: MergeTree, threshold: float) -> MergeTree:
             simplified_graph.remove_node(saddle)
             simplified_graph.add_edge(left, right)
             simplified_arc_vertices[_edge_key(left, right)] = merged_path
-            simplified_node_metadata.pop(saddle, None)
 
         simplified_graph.remove_node(leaf)
-        simplified_node_metadata.pop(leaf, None)
 
     critical_nodes = _sorted_critical_nodes(proxy_tree, simplified_graph)
 

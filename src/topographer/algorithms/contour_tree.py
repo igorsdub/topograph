@@ -20,6 +20,12 @@ def compute_contour_tree_from_split_join(
     The resulting contour tree keeps critical nodes and arc-vertex traces needed
     by downstream persistence and simplification routines.
     """
+    if not ST.augmented or not JT.augmented:
+        raise ValueError(
+            "Contour tree construction requires augmented split and join trees; "
+            "compute them with augment=True"
+        )
+
     merged_tree, merged_arc_vertices = merge_split_join_trees(ST, JT)
     reduced_tree, reduced_arc_vertices = reduce_degree_two_nodes(merged_tree, merged_arc_vertices)
 
@@ -51,11 +57,13 @@ def compute_contour_tree(
         graph,
         scalar=scalar,
         require_connected=require_connected,
+        augment=True,
     )
     JT = compute_join_tree(
         graph,
         scalar=scalar,
         require_connected=require_connected,
+        augment=True,
     )
 
     return compute_contour_tree_from_split_join(ST, JT)

@@ -7,6 +7,11 @@ from topographer.algorithms.contour_tree import (
     compute_contour_tree,
     compute_contour_tree_from_split_join,
 )
+from topographer.algorithms.deaugmentation import (
+    deaugment_contour_tree,
+    deaugment_merge_tree,
+    deaugment_tree_from_arc_vertices,
+)
 from topographer.algorithms.join_tree import compute_join_tree
 from topographer.algorithms.simplification import (
     simplify_contour_tree,
@@ -38,6 +43,9 @@ __all__ = [
     "augment_contour_tree",
     "augment_split_tree",
     "augment_join_tree",
+    "deaugment_tree_from_arc_vertices",
+    "deaugment_merge_tree",
+    "deaugment_contour_tree",
     "simplify_contour_tree",
     "simplify_split_tree",
     "simplify_join_tree",

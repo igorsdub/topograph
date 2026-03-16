@@ -72,6 +72,12 @@ def augment_contour_tree(result: ContourTree) -> ContourTree:
     """Return a contour tree whose graph contains all intermediate arc vertices."""
     augmented_tree = augment_tree_from_arc_vertices(result.arc_vertices)
 
+    if augmented_tree.number_of_nodes() > 0 and not nx.is_tree(augmented_tree):
+        raise ValueError(
+            "Contour tree arc vertices do not define a valid augmented tree; "
+            "intermediate arc paths overlap inconsistently"
+        )
+
     return ContourTree(
         graph=augmented_tree,
         scalar=result.scalar,

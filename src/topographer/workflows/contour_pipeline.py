@@ -10,6 +10,7 @@ from typing import Any
 import networkx as nx
 
 from topographer.algorithms.contour_tree import compute_contour_tree_from_split_join
+from topographer.algorithms.deaugmentation import deaugment_contour_tree
 from topographer.algorithms.join_tree import compute_join_tree
 from topographer.algorithms.persistence import (
     compute_persistence_from_contour_tree,
@@ -234,25 +235,29 @@ def _plot_topology(
     show_regular: bool,
 ) -> tuple[Any, Any]:
     """Plot as planar tree when possible; otherwise use a spring-layout fallback."""
-    if nx.is_tree(tree.graph):
+    tree_to_plot: MergeTree | ContourTree = tree
+    if isinstance(tree, ContourTree) and tree.augmented and not show_regular:
+        tree_to_plot = deaugment_contour_tree(tree)
+
+    if nx.is_tree(tree_to_plot.graph):
         return plot_tree(
-            tree,
+            tree_to_plot,
             scalar_attr=scalar,
             with_labels=with_labels,
             show_regular=show_regular,
             show_scalar_axis=True,
         )
 
-    pos_raw = nx.spring_layout(tree.graph, seed=7)
+    pos_raw = nx.spring_layout(tree_to_plot.graph, seed=7)
     pos = {
         node: (
             float(coord[0]),
-            float(tree.graph.nodes[node].get(scalar, coord[1])),
+            float(tree_to_plot.graph.nodes[node].get(scalar, coord[1])),
         )
         for node, coord in pos_raw.items()
     }
     return draw_tree(
-        tree,
+        tree_to_plot,
         pos=pos,
         with_labels=with_labels,
         show_regular=show_regular,
