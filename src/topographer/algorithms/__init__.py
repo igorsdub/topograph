@@ -7,6 +7,7 @@ from topographer.algorithms.contour_tree import (
     compute_contour_tree,
     compute_contour_tree_from_split_join,
 )
+from topographer.algorithms.contour_prune import compute_contour_tree_by_pruning
 from topographer.algorithms.deaugmentation import (
     deaugment_contour_tree,
     deaugment_merge_tree,
@@ -25,6 +26,7 @@ __all__ = [
     "compute_join_tree",
     "compute_contour_tree",
     "compute_contour_tree_from_split_join",
+    "compute_contour_tree_by_pruning",
     "augment_contour_tree",
     "augment_split_tree",
     "augment_join_tree",

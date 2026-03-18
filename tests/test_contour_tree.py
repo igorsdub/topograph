@@ -51,8 +51,8 @@ def test_reduce_degree_two_nodes_suppresses_chain_vertices():
     assert reduced_arc_vertices[("a", "d")] == ["a", "b", "c", "d"]
 
 
-def test_compute_contour_tree_from_split_join_returns_non_augmented_tree():
-    """Ensure contour tree built from split/join context is non-augmented by default."""
+def test_compute_contour_tree_from_split_join_returns_augmented_tree():
+    """Ensure contour tree built from split/join context carries augmented arc traces."""
     graph = easy_star_graph(6)
 
     ST = compute_split_tree(graph, scalar="scalar")
@@ -66,7 +66,7 @@ def test_compute_contour_tree_from_split_join_returns_non_augmented_tree():
     assert CT.scalar == "scalar"
     assert ST.augmented is True
     assert JT.augmented is True
-    assert CT.augmented is False
+    assert CT.augmented is True
     assert CT.graph.number_of_nodes() > 0
     assert CT.graph.number_of_edges() > 0
     assert CT.ST is ST
@@ -115,7 +115,7 @@ def test_augment_contour_tree_keeps_all_vertices_on_path_graph():
     CT = compute_contour_tree(graph, scalar="scalar")
     augmented = augment_contour_tree(CT)
 
-    assert CT.augmented is False
+    assert CT.augmented is True
     assert augmented.augmented is True
     assert set(graph.nodes()).issubset(augmented.tree.nodes())
     assert augmented.tree.number_of_edges() == graph.number_of_edges()

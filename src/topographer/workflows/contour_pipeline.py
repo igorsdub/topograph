@@ -239,6 +239,8 @@ def _plot_topology(
     if isinstance(tree, ContourTree) and tree.augmented and not show_regular:
         tree_to_plot = deaugment_contour_tree(tree)
 
+    _hydrate_scalar_attributes(tree_to_plot, scalar=scalar)
+
     if nx.is_tree(tree_to_plot.graph):
         return plot_tree(
             tree_to_plot,
