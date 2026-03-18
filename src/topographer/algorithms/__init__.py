@@ -3,11 +3,11 @@ from topographer.algorithms.augmentation import (
     augment_join_tree,
     augment_split_tree,
 )
+from topographer.algorithms.contour_prune import compute_contour_tree_by_pruning
 from topographer.algorithms.contour_tree import (
     compute_contour_tree,
     compute_contour_tree_from_split_join,
 )
-from topographer.algorithms.contour_prune import compute_contour_tree_by_pruning
 from topographer.algorithms.deaugmentation import (
     deaugment_contour_tree,
     deaugment_merge_tree,
