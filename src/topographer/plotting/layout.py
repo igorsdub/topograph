@@ -131,20 +131,24 @@ def _compute_x_leaf_span(
     x_pos: dict[Any, float] = {}
     next_leaf_x = 0
 
-    def visit(node: Any) -> float:
-        nonlocal next_leaf_x
-
+    stack: list[tuple[Any, bool]] = [(root, False)]
+    while stack:
+        node, processed = stack.pop()
         node_children = children[node]
-        if not node_children:
-            x_coord = float(next_leaf_x)
-            x_pos[node] = x_coord
-            next_leaf_x += 1
-            return x_coord
 
-        child_x = [visit(child) for child in node_children]
-        x_coord = (min(child_x) + max(child_x)) / 2.0
-        x_pos[node] = x_coord
-        return x_coord
+        if processed:
+            if not node_children:
+                x_coord = float(next_leaf_x)
+                x_pos[node] = x_coord
+                next_leaf_x += 1
+                continue
 
-    visit(root)
+            child_x = [x_pos[child] for child in node_children]
+            x_pos[node] = (min(child_x) + max(child_x)) / 2.0
+            continue
+
+        stack.append((node, True))
+        for child in reversed(node_children):
+            stack.append((child, False))
+
     return x_pos

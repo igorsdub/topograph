@@ -81,3 +81,14 @@ def test_planar_layout_rejects_missing_root() -> None:
 
     with pytest.raises(ValueError, match="is not in tree"):
         planar_layout(graph, root="missing")
+
+
+def test_planar_layout_handles_deep_path_tree_without_recursion_error() -> None:
+    graph = nx.path_graph(3000)
+    for node in graph.nodes:
+        graph.nodes[node]["scalar"] = float(node)
+
+    pos = planar_layout(graph, scalar="scalar")
+
+    assert len(pos) == graph.number_of_nodes()
+    assert all(isinstance(coords, tuple) and len(coords) == 2 for coords in pos.values())
