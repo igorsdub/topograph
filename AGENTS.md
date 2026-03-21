@@ -40,10 +40,10 @@ Agents MUST preserve this structure.
 
 ---
 
-## Package Structure (FLAT — DO NOT BREAK)
+## Package Structure
 
 ```
-topographer/
+src/topographer/
 ├── api.py
 ├── core.py
 ├── trees.py
