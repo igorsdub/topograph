@@ -44,6 +44,7 @@ Agents MUST preserve this structure.
 
 ```
 src/topographer/
+├── __init__.py
 ├── api.py
 ├── core.py
 ├── trees.py
@@ -85,7 +86,7 @@ src/topographer/
 
 * **plot.py**
 
-  * visualization (non-critical)
+  * lightweight plotting data helpers only
 
 ---
 
@@ -189,6 +190,7 @@ Tests must:
 * use small graphs
 * be deterministic
 * avoid randomness unless seeded
+* continue to pass with `pixi run python -m pytest -q`
 
 ---
 
@@ -202,6 +204,7 @@ Agents must NOT:
 * Optimize prematurely
 * Rewrite structure into subpackages (yet)
 * Implement full TTK complexity
+* Reintroduce legacy scaffold modules, CLI layers, or old subpackage layouts unless explicitly requested
 
 ---
 
@@ -242,3 +245,5 @@ When extending:
 > This code should be understandable in ~10 minutes by a human.
 
 If an agent produces something that violates this, it is wrong.
+
+After tasks complete update CHANGELOG.md
