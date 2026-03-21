@@ -64,6 +64,60 @@ def test_split_tree_compute_rejects_missing_scalar(tmp_path):
     assert "missing scalar attribute" in result.stdout
 
 
+def test_split_tree_compute_accepts_custom_scalar_name(tmp_path):
+    """Ensure split-tree CLI accepts non-default scalar attribute via --scalar."""
+    source_path = tmp_path / "input_custom_scalar.pkl"
+    output_path = tmp_path / "split_tree.pkl"
+
+    graph = easy_path_graph(4)
+    for node, data in graph.nodes(data=True):
+        data["height"] = data.pop("scalar")
+
+    _write_graph(source_path, graph)
+
+    result = runner.invoke(
+        app,
+        [
+            "split-tree",
+            "compute",
+            str(source_path),
+            str(output_path),
+            "--scalar",
+            "height",
+        ],
+    )
+
+    assert result.exit_code == 0
+    assert "Computing split tree" in result.stdout
+
+
+def test_join_tree_compute_accepts_custom_scalar_name(tmp_path):
+    """Ensure join-tree CLI accepts non-default scalar attribute via --scalar."""
+    source_path = tmp_path / "input_custom_scalar.pkl"
+    output_path = tmp_path / "join_tree.pkl"
+
+    graph = easy_path_graph(4)
+    for node, data in graph.nodes(data=True):
+        data["height"] = data.pop("scalar")
+
+    _write_graph(source_path, graph)
+
+    result = runner.invoke(
+        app,
+        [
+            "join-tree",
+            "compute",
+            str(source_path),
+            str(output_path),
+            "--scalar",
+            "height",
+        ],
+    )
+
+    assert result.exit_code == 0
+    assert "Computing join tree" in result.stdout
+
+
 def test_run_pipeline_validates_graph_before_execution(tmp_path):
     """Confirm pipeline command validates a valid graph and starts execution."""
     source_path = tmp_path / "valid.pkl"

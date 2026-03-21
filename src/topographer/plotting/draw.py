@@ -50,20 +50,26 @@ def draw_nodes(
     if not show_regular:
         regular_nodes = []
 
-    groups = {
-        "minima": critical_groups["minima"],
-        "maxima": critical_groups["maxima"],
-        "saddles": critical_groups["saddles"],
-        "regular": regular_nodes,
-    }
+    draw_order = [
+        ("regular", regular_nodes),
+        ("saddles", critical_groups["saddles"]),
+        ("minima", critical_groups["minima"]),
+        ("maxima", critical_groups["maxima"]),
+    ]
 
-    for group_name, nodes in groups.items():
+    for group_name, nodes in draw_order:
         if not nodes:
             continue
 
         group_style = style[group_name]
+        z_order_map = {
+            "regular": 1,
+            "saddles": 2,
+            "minima": 3,
+            "maxima": 3,
+        }
         draw_networkx_nodes = cast(Any, nx.draw_networkx_nodes)
-        draw_networkx_nodes(
+        collection = draw_networkx_nodes(
             graph,
             pos,
             nodelist=nodes,
@@ -71,9 +77,12 @@ def draw_nodes(
             node_shape=group_style["marker"],
             node_color=group_style["node_color"],
             node_size=max(float(group_style["node_size"]), float(node_size)),
+            alpha=float(group_style.get("alpha", 1.0)),
             linewidths=0.6,
             edgecolors="#111111",
         )
+        if collection is not None and hasattr(collection, "set_zorder"):
+            collection.set_zorder(float(z_order_map[group_name]))
 
 
 def annotate_nodes(
