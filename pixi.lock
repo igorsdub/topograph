@@ -366,7 +366,7 @@ packages:
 - pypi: ./
   name: topographer
   version: 0.0.1
-  sha256: 249bd6f74680bcf1ecc56315b8e43ec96ec8a8baf3f3b35a44ac06787edc55b4
+  sha256: 9ee40775c723794b7258b1053b24f8362fce7b997e02cf09ae7b4883ed79e2c1
   requires_dist:
   - networkx>=3.0
   requires_python: ~=3.10.0

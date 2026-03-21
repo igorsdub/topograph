@@ -11,7 +11,12 @@ All notable changes to this project are documented in this file.
   `simplify.py`, `plot.py`, and `models.py`
 * Implemented the end-to-end `run_pipeline(G, scalar, simplify_threshold=None)` API
 * Added dataclass models for `MergeTree`, `ContourTree`, `PersistencePair`, and `PipelineResult`
-* Added deterministic tests in `tests/test_pipeline.py`
+* Added focused deterministic test modules for core validation, tree construction,
+  persistence, simplification, plotting helpers, and pipeline execution
+* Added a runnable example in `examples/basic_pipeline.py`
+* Added compatibility helper APIs: `has_unique_scalars`, `make_total_ordering`,
+  `compute_contour_tree_from_trees`, `compute_persistence`, and
+  `simplify_tree_by_persistence`
 
 ### Changed
 
@@ -20,6 +25,10 @@ All notable changes to this project are documented in this file.
 * Implemented contour tree construction by merging split and join trees and contracting degree-2 nodes
 * Implemented persistence pair computation from merge and contour trees
 * Implemented threshold-based contour-tree simplification
+* Simplified module boundaries so tree and persistence code rely on shared package
+  models and core helpers instead of local fallback structures
+* Expanded top-level exports and README usage examples to make the package easier
+  to discover from `import topographer`
 * Rewrote `README.md` to describe the minimal package and current development workflow
 * Simplified `pixi.toml` and `pyproject.toml` to match the minimal NetworkX-based package
 * Tightened the build configuration so the built artifact contains only the minimal package
@@ -37,5 +46,5 @@ All notable changes to this project are documented in this file.
 
 Latest verification result:
 
-* Test suite passed: `6 passed`
+* Test suite passed: `24 passed`
 * Pixi build completed successfully

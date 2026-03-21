@@ -75,3 +75,13 @@ def simplify_contour_tree(
         split_tree=contour_tree.split_tree,
         arc_metadata=arc_metadata,
     )
+
+
+def simplify_tree_by_persistence(
+    tree: ContourTree,
+    pairs: Iterable[PersistencePair],
+    threshold: float,
+) -> ContourTree:
+    """Compatibility wrapper for persistence-based contour-tree simplification."""
+
+    return simplify_contour_tree(tree, pairs, threshold)

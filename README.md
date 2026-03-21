@@ -18,6 +18,7 @@ The package is intentionally simple:
 - dataclass-based outputs
 - deterministic tie handling
 - modular functions that are easy to test
+- lightweight plotting-data helpers for graphs, trees, and persistence pairs
 
 ## Package Layout
 
@@ -45,6 +46,15 @@ The main entry point is `run_pipeline`:
 6. Compute persistence pairs
 7. Optionally simplify low-persistence arcs
 
+Lower-level helpers are also available:
+
+- `check_graph`, `has_unique_scalars`, `make_total_ordering`
+- `compute_join_tree`, `compute_split_tree`, `compute_contour_tree`
+- `compute_contour_tree_from_trees`
+- `compute_persistence`
+- `simplify_tree_by_persistence`
+- `plot_graph`, `plot_tree`, `plot_persistence_diagram`
+
 ## Example
 
 ```python
@@ -68,6 +78,9 @@ print(
     [(pair.extremum, pair.saddle, pair.persistence) for pair in result.persistence_pairs],
 )
 ```
+
+A standalone runnable example is available in
+[`examples/basic_pipeline.py`](examples/basic_pipeline.py).
 
 ## Development
 

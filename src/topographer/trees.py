@@ -1,123 +1,26 @@
-"""Sweep-based split tree, join tree, and contour tree construction.
-
-The implementation is intentionally small and deterministic. It follows a
-simple filtration-style sweep over scalar values on nodes and uses a plain
-union-find structure to track connected components.
-"""
+"""Sweep-based split tree, join tree, and contour tree construction."""
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
 from numbers import Real
 from typing import Any, Hashable, Iterable
 
 import networkx as nx
 
-try:  # pragma: no cover - prefer the shared package models when available.
-    from .models import ContourTree, MergeTree
-except ImportError:  # pragma: no cover - local fallback for this module.
-
-    @dataclass(slots=True)
-    class MergeTree:
-        """Minimal merge tree container.
-
-        Attributes:
-            graph: The tree topology.
-            scalar: Name of the node scalar attribute.
-            kind: Either ``"join"`` or ``"split"``.
-            arc_metadata: Optional per-edge metadata keyed by ``(u, v)``.
-        """
-
-        graph: nx.Graph
-        scalar: str
-        kind: str = ""
-        arc_metadata: dict[tuple[Hashable, Hashable], dict[str, Any]] = field(
-            default_factory=dict
-        )
-
-    @dataclass(slots=True)
-    class ContourTree:
-        """Minimal contour tree container."""
-
-        graph: nx.Graph
-        scalar: str
-        join_tree: MergeTree
-        split_tree: MergeTree
-        arc_metadata: dict[tuple[Hashable, Hashable], dict[str, Any]] = field(
-            default_factory=dict
-        )
-
-
-try:  # pragma: no cover - prefer shared core helpers when available.
-    from .core import check_graph
-except ImportError:  # pragma: no cover - local fallback for this module.
-
-    def check_graph(G: nx.Graph, scalar_attr: str) -> None:
-        """Validate that ``G`` is a NetworkX graph with numeric node scalars."""
-
-        if not isinstance(G, nx.Graph):
-            raise TypeError("G must be an instance of networkx.Graph.")
-        missing = [node for node, data in G.nodes(data=True) if scalar_attr not in data]
-        if missing:
-            raise ValueError(
-                f"Missing scalar attribute '{scalar_attr}' on nodes: {missing!r}"
-            )
-        bad = [
-            node
-            for node, data in G.nodes(data=True)
-            if not isinstance(data[scalar_attr], Real) or isinstance(data[scalar_attr], bool)
-        ]
-        if bad:
-            raise TypeError(
-                f"Scalar attribute '{scalar_attr}' must be numeric on nodes: {bad!r}"
-            )
-
+from .core import UnionFind, check_graph
+from .models import ContourTree, MergeTree
 
 Node = Hashable
 
 __all__ = [
-    "MergeTree",
-    "ContourTree",
-    "join_tree",
-    "split_tree",
-    "contour_tree",
+    "compute_contour_tree",
+    "compute_contour_tree_from_trees",
     "compute_join_tree",
     "compute_split_tree",
-    "compute_contour_tree",
+    "contour_tree",
+    "join_tree",
+    "split_tree",
 ]
-
-
-@dataclass(slots=True)
-class _UnionFind:
-    """Very small union-find helper used by the sweep."""
-
-    parent: dict[Node, Node] = field(default_factory=dict)
-
-    def add(self, node: Node) -> None:
-        """Register ``node`` if it has not been seen before."""
-
-        if node not in self.parent:
-            self.parent[node] = node
-
-    def find(self, node: Node) -> Node:
-        """Return the current representative for ``node``."""
-
-        parent = self.parent[node]
-        if parent != node:
-            self.parent[node] = self.find(parent)
-        return self.parent[node]
-
-    def union(self, root: Node, other: Node) -> Node:
-        """Attach ``other`` under ``root`` and return the surviving root."""
-
-        self.add(root)
-        self.add(other)
-        root = self.find(root)
-        other = self.find(other)
-        if root == other:
-            return root
-        self.parent[other] = root
-        return root
 
 
 def _scalar_value(data: dict[str, Any], scalar: str) -> float:
@@ -132,10 +35,7 @@ def _ordered_nodes(G: nx.Graph, scalar: str, ascending: bool) -> list[Node]:
 
     nodes = list(G.nodes)
     nodes.sort(
-        key=lambda node: (
-            _scalar_value(G.nodes[node], scalar),
-            repr(node),
-        ),
+        key=lambda node: (_scalar_value(G.nodes[node], scalar), repr(node)),
         reverse=not ascending,
     )
     return nodes
@@ -174,7 +74,7 @@ def _build_merge_tree(G: nx.Graph, scalar: str, ascending: bool) -> MergeTree:
     tree = nx.Graph()
     tree.add_nodes_from((node, {scalar: scalar_map[node]}) for node in G.nodes)
 
-    uf = _UnionFind()
+    uf = UnionFind()
     active: set[Node] = set()
     representative: dict[Node, Node] = {}
     birth: dict[Node, Node] = {}
@@ -185,8 +85,8 @@ def _build_merge_tree(G: nx.Graph, scalar: str, ascending: bool) -> MergeTree:
 
     for node in ordered_nodes:
         uf.add(node)
-        active_neighbors = [nbr for nbr in G.neighbors(node) if nbr in active]
-        roots = {uf.find(nbr) for nbr in active_neighbors}
+        active_neighbors = [neighbor for neighbor in G.neighbors(node) if neighbor in active]
+        roots = {uf.find(neighbor) for neighbor in active_neighbors}
 
         if not roots:
             birth[node] = node
@@ -196,10 +96,7 @@ def _build_merge_tree(G: nx.Graph, scalar: str, ascending: bool) -> MergeTree:
 
         roots_in_order = sorted(
             roots,
-            key=lambda root: (
-                scalar_map[birth[root]],
-                repr(root),
-            ),
+            key=lambda root: (scalar_map[birth[root]], repr(root)),
             reverse=not prefer_low,
         )
         survivor = _component_representative(
@@ -210,13 +107,13 @@ def _build_merge_tree(G: nx.Graph, scalar: str, ascending: bool) -> MergeTree:
         )
 
         for root in roots_in_order:
-            rep = representative[root]
-            if rep != node:
-                tree.add_edge(node, rep)
-                arc_metadata[(node, rep)] = {
+            representative_node = representative[root]
+            if representative_node != node:
+                tree.add_edge(node, representative_node)
+                arc_metadata[(node, representative_node)] = {
+                    "component_root": root,
                     "event": event_kind,
                     "scalar": scalar_map[node],
-                    "component_root": root,
                 }
             if root != survivor:
                 uf.union(survivor, root)
@@ -244,11 +141,7 @@ def split_tree(G: nx.Graph, scalar: str = "scalar") -> MergeTree:
 
 
 def contour_tree(split: MergeTree, join: MergeTree) -> ContourTree:
-    """Merge split and join trees, then contract degree-2 nodes.
-
-    The public pipeline passes ``split`` first and ``join`` second. For
-    resilience, if the arguments arrive swapped we normalize them by ``kind``.
-    """
+    """Merge split and join trees, then contract degree-2 relay nodes."""
 
     if split.kind == "join" and join.kind == "split":
         split, join = join, split
@@ -269,22 +162,25 @@ def contour_tree(split: MergeTree, join: MergeTree) -> ContourTree:
     changed = True
     while changed:
         changed = False
-        degree_two_nodes = [
-            node for node in list(graph.nodes) if graph.degree[node] == 2
-        ]
-        for node in degree_two_nodes:
+        for node in list(graph.nodes):
+            if graph.degree[node] != 2:
+                continue
+
             neighbors = list(graph.neighbors(node))
             if len(neighbors) != 2:
                 continue
+
             left, right = neighbors
             graph.remove_node(node)
             if left != right and not graph.has_edge(left, right):
                 graph.add_edge(left, right)
+
             arc_metadata.pop((left, node), None)
             arc_metadata.pop((node, left), None)
             arc_metadata.pop((right, node), None)
             arc_metadata.pop((node, right), None)
             changed = True
+            break
 
     return ContourTree(
         graph=graph,
@@ -307,7 +203,32 @@ def compute_split_tree(G: nx.Graph, scalar: str = "scalar") -> MergeTree:
     return split_tree(G, scalar=scalar)
 
 
-def compute_contour_tree(join: MergeTree, split: MergeTree) -> ContourTree:
-    """Alias for :func:`contour_tree`."""
+def compute_contour_tree_from_trees(split_tree: MergeTree, join_tree: MergeTree) -> ContourTree:
+    """Build a contour tree from precomputed split and join trees."""
 
-    return contour_tree(join, split)
+    return contour_tree(split_tree, join_tree)
+
+
+def compute_contour_tree(
+    graph_or_split_tree: nx.Graph | MergeTree,
+    scalar_or_join_tree: str | MergeTree = "scalar",
+) -> ContourTree:
+    """Compute a contour tree from a graph or from split/join trees.
+
+    This keeps the public API convenient for direct use while preserving the
+    explicit pipeline in :mod:`topographer.api`.
+    """
+
+    if isinstance(graph_or_split_tree, nx.Graph):
+        scalar = str(scalar_or_join_tree)
+        split = compute_split_tree(graph_or_split_tree, scalar=scalar)
+        join = compute_join_tree(graph_or_split_tree, scalar=scalar)
+        return compute_contour_tree_from_trees(split, join)
+
+    if not isinstance(scalar_or_join_tree, MergeTree):
+        raise TypeError(
+            "compute_contour_tree expects either (graph, scalar) or "
+            "(split_tree, join_tree)."
+        )
+
+    return compute_contour_tree_from_trees(graph_or_split_tree, scalar_or_join_tree)

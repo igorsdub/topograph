@@ -10,7 +10,11 @@ from typing import Any
 import networkx as nx
 
 
-def check_graph(G: nx.Graph, scalar_attr: str) -> dict[Any, float]:
+def check_graph(
+    G: nx.Graph,
+    scalar_attr: str = "scalar",
+    require_connected: bool = True,
+) -> dict[Any, float]:
     """Validate that ``G`` is a graph with a numeric scalar on every node.
 
     Parameters
@@ -19,6 +23,8 @@ def check_graph(G: nx.Graph, scalar_attr: str) -> dict[Any, float]:
         Input graph.
     scalar_attr:
         Node attribute storing the scalar field.
+    require_connected:
+        Whether to reject disconnected graphs.
 
     Returns
     -------
@@ -37,6 +43,10 @@ def check_graph(G: nx.Graph, scalar_attr: str) -> dict[Any, float]:
 
     if not isinstance(G, nx.Graph):
         raise TypeError("G must be an instance of networkx.Graph.")
+    if G.number_of_nodes() == 0:
+        raise ValueError("G must contain at least one node.")
+    if require_connected and not nx.is_connected(G):
+        raise ValueError("G must be connected.")
 
     scalars: dict[Any, float] = {}
     for node, data in G.nodes(data=True):
@@ -57,9 +67,16 @@ def check_graph(G: nx.Graph, scalar_attr: str) -> dict[Any, float]:
     return scalars
 
 
+def has_unique_scalars(G: nx.Graph, scalar_attr: str = "scalar") -> bool:
+    """Return ``True`` when every node scalar is unique."""
+
+    scalars = check_graph(G, scalar_attr, require_connected=False)
+    return len(set(scalars.values())) == len(scalars)
+
+
 def ensure_total_order(
     G: nx.Graph,
-    scalar_attr: str,
+    scalar_attr: str = "scalar",
     *,
     perturb: bool = True,
     epsilon: float = 1e-9,
@@ -130,6 +147,35 @@ def ensure_total_order(
         ordered_graph.nodes[node][scalar_attr] = value
 
     return ordered_graph, ordered_scalars
+
+
+def make_total_ordering(
+    G: nx.Graph,
+    scalar_attr: str = "scalar",
+    out_attr: str | None = None,
+    inplace: bool = False,
+) -> nx.Graph:
+    """Ensure a deterministic total scalar order on ``G``.
+
+    Parameters
+    ----------
+    G:
+        Input graph.
+    scalar_attr:
+        Source scalar attribute.
+    out_attr:
+        Destination attribute. Defaults to ``scalar_attr``.
+    inplace:
+        Whether to update ``G`` in place.
+    """
+
+    target_attr = scalar_attr if out_attr is None else out_attr
+    ordered_graph, ordered_scalars = ensure_total_order(G, scalar_attr)
+
+    result = G if inplace else G.copy()
+    for node in result.nodes:
+        result.nodes[node][target_attr] = ordered_scalars[node]
+    return result
 
 
 class UnionFind:

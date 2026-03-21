@@ -36,6 +36,7 @@ packages = ["src/topographer"]
 include = [
   "/src/topographer",
   "/tests",
+  "/examples",
   "/README.md",
   "/LICENSE",
   "/pyproject.toml",
