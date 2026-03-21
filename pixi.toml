@@ -12,18 +12,8 @@ pytest = "*"
 ruff = "*"
 pip = "*"
 
-[tasks]
-version = "topographer version"
-completion = "topographer --install-completion"
-shoot = "topographer gun shoot"
-load = "topographer gun load"
-
 [pypi-dependencies]
-python-dotenv = "*"
-rich = "*"
-typer = "*"
 networkx = "*"
-matplotlib = "*"
 topographer = { path = ".", editable = true }
 
 [package]
@@ -40,7 +30,4 @@ hatchling = "*"
 hatchling = "*"
 
 [package.run-dependencies]
-rich = "*"
-typer = "*"
 networkx = "*"
-matplotlib = "*"
