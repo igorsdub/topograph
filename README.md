@@ -19,7 +19,7 @@ The package is intentionally simple:
 - deterministic tie handling
 - modular functions that are easy to test
 - lightweight plotting-data helpers for graphs, trees, and persistence pairs
-- a runnable gallery example rendered with `matplotlib`
+- a runnable path-graph walkthrough example
 
 ## Package Layout
 
@@ -81,24 +81,20 @@ print(
 ```
 
 A standalone runnable example is available in
-[`examples/basic_pipeline.py`](examples/basic_pipeline.py).
+[`examples/path_graph_pipeline.py`](examples/path_graph_pipeline.py).
 Run it with:
 
 ```bash
-pixi run python examples/basic_pipeline.py
+pixi run python examples/path_graph_pipeline.py
 ```
 
-It writes a gallery to `output/pipeline_plots/` containing:
+It prints each pipeline step in order for a small path graph:
 
-- `01_initial_graph.png`
-- `02_split_tree.png`
-- `03_join_tree.png`
-- `04_contour_tree.png`
-- `05_persistence_diagram.png`
-- `06_simplified_persistence_diagram.png`
-- `07_simplified_contour_tree.png`
-- `index.html`
-- `summary.json`
+- original node scalars
+- validated and ordered scalars
+- join tree, split tree, and contour tree edges
+- persistence pairs
+- simplified contour tree edges
 
 ## Development
 

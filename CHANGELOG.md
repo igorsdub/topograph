@@ -13,14 +13,13 @@ All notable changes to this project are documented in this file.
 * Added dataclass models for `MergeTree`, `ContourTree`, `PersistencePair`, and `PipelineResult`
 * Added focused deterministic test modules for core validation, tree construction,
   persistence, simplification, plotting helpers, and pipeline execution
-* Added a runnable example in `examples/basic_pipeline.py`
+* Added a runnable example in `examples/path_graph_pipeline.py`
 * Added compatibility helper APIs: `has_unique_scalars`, `make_total_ordering`,
   `compute_contour_tree_from_trees`, `compute_persistence`, and
   `simplify_tree_by_persistence`
-* Added a rendered gallery workflow to `examples/basic_pipeline.py` that writes
-  PNG stages, an `index.html`, and a `summary.json` for the full pipeline
-* Added contract tests for the basic pipeline gallery metadata and simplified
-  persistence semantics
+* Added deterministic example graph builders in `src/topographer/examples.py`
+  for trivial, path, circular, star, tadpole, wheel, cubical, windmill,
+  cave man, ladder, and balanced tree graphs
 
 ### Changed
 
@@ -39,6 +38,10 @@ All notable changes to this project are documented in this file.
 * Recomputed simplified persistence diagrams from the simplified contour graph
   instead of reusing the original join/split trees
 * Added `matplotlib` to the example/runtime environment for rendered gallery output
+* Replaced the gallery-oriented `examples/basic_pipeline.py` example with the
+  simpler print-first walkthrough in `examples/path_graph_pipeline.py`
+* Replaced gallery-specific example tests with deterministic tests for the new
+  path-graph example and reusable example graph builders
 
 ### Removed
 
@@ -53,5 +56,5 @@ All notable changes to this project are documented in this file.
 
 Latest verification result:
 
-* Test suite passed: `24 passed`
-* Pixi build completed successfully
+* Test suite passed: `31 passed`
+* Pixi build not rerun after the example simplification changes
