@@ -44,6 +44,9 @@ All notable changes to this project are documented in this file.
   contour tree in `examples/path_graph_pipeline.py`
 * Replaced gallery-specific example tests with deterministic tests for the new
   path-graph example and reusable example graph builders
+* Simplified rendered graph and tree plots so node height follows the chosen
+  scalar on the y-axis, while the x-axis is hidden and no grid/background
+  styling is shown
 
 ### Removed
 

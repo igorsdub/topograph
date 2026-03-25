@@ -14,12 +14,11 @@ def scalar_layout(
     G: nx.Graph,
     scalar: str = "scalar",
 ) -> dict[object, tuple[float, float]]:
-    """Place nodes by index on x and scalar value on y."""
+    """Place nodes using only the scalar value on the y-axis."""
 
-    ordered_nodes = sorted(G.nodes, key=lambda node: (float(G.nodes[node][scalar]), str(node)))
     return {
-        node: (float(index), float(G.nodes[node][scalar]))
-        for index, node in enumerate(ordered_nodes)
+        node: (0.0, float(G.nodes[node][scalar]))
+        for node in G.nodes
     }
 
 
@@ -101,10 +100,13 @@ def save_graph_plot(
     figure, axis = plt.subplots(figsize=(8, 4.8))
     if title:
         axis.set_title(title)
-    axis.set_xlabel("Scalar Order")
-    axis.set_ylabel("Scalar Value")
-    axis.set_facecolor("#fffdf8")
-    axis.grid(color="#ddd4c7", linewidth=0.8, alpha=0.8)
+    axis.set_ylabel(scalar)
+    axis.get_xaxis().set_visible(False)
+    axis.get_yaxis().set_visible(True)
+    axis.spines["top"].set_visible(False)
+    axis.spines["right"].set_visible(False)
+    axis.spines["bottom"].set_visible(False)
+    axis.tick_params(axis="x", which="both", bottom=False, labelbottom=False)
 
     nx.draw_networkx_edges(graph, pos=positions, ax=axis, edge_color=edge_color, width=2.2)
     nx.draw_networkx_nodes(
