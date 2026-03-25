@@ -19,7 +19,7 @@ The package is intentionally simple:
 - deterministic tie handling
 - modular functions that are easy to test
 - lightweight plotting-data helpers for graphs, trees, and persistence pairs
-- a runnable path-graph walkthrough example
+- runnable graph-specific walkthrough examples
 
 ## Package Layout
 
@@ -80,7 +80,7 @@ print(
 )
 ```
 
-A standalone runnable example is available in
+A standalone runnable entry example is available in
 [`examples/path_graph_pipeline.py`](examples/path_graph_pipeline.py).
 Run it with:
 
@@ -95,6 +95,10 @@ It prints each pipeline step in order for a small path graph and writes SVG plot
 - the original graph, split tree, join tree, and contour tree
 - persistence pairs
 - simplified contour tree edges
+
+Additional graph-specific pipeline scripts are also available in `examples/`
+for the trivial, circular, star, tadpole, wheel, cubical, windmill, cave man,
+ladder, and balanced tree example graphs.
 
 ## Development
 

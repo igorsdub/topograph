@@ -1,4 +1,4 @@
-"""Tests for the step-by-step path graph example."""
+"""Tests for runnable example pipeline scripts."""
 
 from __future__ import annotations
 
@@ -19,20 +19,74 @@ from topographer import (
     simplify_tree_by_persistence,
 )
 
+SCRIPT_TO_BUILDER = {
+    "path_graph_pipeline": "make_path_graph",
+    "trivial_graph_pipeline": "make_trivial_graph",
+    "circular_graph_pipeline": "make_circular_graph",
+    "star_graph_pipeline": "make_star_graph",
+    "tadpole_graph_pipeline": "make_tadpole_graph",
+    "wheel_graph_pipeline": "make_wheel_graph",
+    "cubical_graph_pipeline": "make_cubical_graph",
+    "windmill_graph_pipeline": "make_windmill_graph",
+    "cave_man_graph_pipeline": "make_cave_man_graph",
+    "ladder_graph_pipeline": "make_ladder_graph",
+    "balanced_tree_graph_pipeline": "make_balanced_tree_graph",
+}
 
-def load_path_graph_pipeline_module():
+REQUIRED_HEADINGS = [
+    "Input graph node scalars:",
+    "Validated scalars:",
+    "Ordered scalars:",
+    "Join tree edges:",
+    "Split tree edges:",
+    "Contour tree edges:",
+    "Wrote SVG plots:",
+    "Persistence pairs:",
+]
+
+
+def load_example_module(script_name: str):
     """Load the example module from its file path."""
 
     root = Path(__file__).resolve().parents[1]
-    module_path = root / "examples" / "path_graph_pipeline.py"
-    spec = importlib.util.spec_from_file_location("path_graph_pipeline_example", module_path)
+    module_path = root / "examples" / f"{script_name}.py"
+    spec = importlib.util.spec_from_file_location(f"{script_name}_example", module_path)
     if spec is None or spec.loader is None:
-        raise RuntimeError("Could not load examples/path_graph_pipeline.py")
+        raise RuntimeError(f"Could not load examples/{script_name}.py")
 
     module = importlib.util.module_from_spec(spec)
     sys.modules[spec.name] = module
     spec.loader.exec_module(module)
     return module
+
+
+def test_example_pipeline_script_set_matches_builder_exports() -> None:
+    example_dir = Path(__file__).resolve().parents[1] / "examples"
+    script_names = {
+        path.stem
+        for path in example_dir.glob("*_graph_pipeline.py")
+    }
+    script_names.add("path_graph_pipeline")
+
+    assert script_names == set(SCRIPT_TO_BUILDER)
+
+
+def test_example_pipeline_scripts_load_and_write_svg_plots(tmp_path: Path, capsys) -> None:
+    for script_name in SCRIPT_TO_BUILDER:
+        module = load_example_module(script_name)
+        output_dir = tmp_path / script_name
+
+        module.main(output_dir=output_dir)
+
+        output = capsys.readouterr().out
+        for heading in REQUIRED_HEADINGS:
+            assert heading in output
+        assert "Simplified contour tree edges (threshold=0.5):" in output
+
+        assert (output_dir / "01_original_graph.svg").exists()
+        assert (output_dir / "02_split_tree.svg").exists()
+        assert (output_dir / "03_join_tree.svg").exists()
+        assert (output_dir / "04_contour_tree.svg").exists()
 
 
 def test_path_graph_builder_returns_connected_graph_with_unit_interval_scalars() -> None:
@@ -88,24 +142,18 @@ def test_path_graph_example_pipeline_produces_expected_outputs() -> None:
 
 
 def test_path_graph_example_script_prints_walkthrough(capsys) -> None:
-    module = load_path_graph_pipeline_module()
+    module = load_example_module("path_graph_pipeline")
 
     module.main()
 
     output = capsys.readouterr().out
-    assert "Input graph node scalars:" in output
-    assert "Validated scalars:" in output
-    assert "Ordered scalars:" in output
-    assert "Join tree edges:" in output
-    assert "Split tree edges:" in output
-    assert "Contour tree edges:" in output
-    assert "Wrote SVG plots:" in output
-    assert "Persistence pairs:" in output
+    for heading in REQUIRED_HEADINGS:
+        assert heading in output
     assert "Simplified contour tree edges (threshold=0.5):" in output
 
 
 def test_path_graph_example_script_writes_svg_plots(tmp_path: Path) -> None:
-    module = load_path_graph_pipeline_module()
+    module = load_example_module("path_graph_pipeline")
 
     module.main(output_dir=tmp_path)
 

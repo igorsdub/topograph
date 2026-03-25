@@ -119,6 +119,17 @@ def test_plot_tree_layout_is_deterministic() -> None:
     assert first == second
 
 
+def test_plot_tree_falls_back_to_scalar_layout_for_non_tree_graphs() -> None:
+    graph = nx.cycle_graph(4)
+    nx.set_node_attributes(graph, {0: 0.0, 1: 1.0, 2: 2.0, 3: 3.0}, "height")
+    contour_tree = compute_contour_tree(graph, "height")
+
+    data = plot_tree(contour_tree)
+
+    assert set(data["nodes"]) == set(contour_tree.graph.nodes)
+    assert all(position[0] == 0.0 for position in data["positions"].values())
+
+
 def test_plot_persistence_diagram_returns_point_data() -> None:
     contour_tree = compute_contour_tree(make_graph(), "height")
     pairs = compute_persistence(contour_tree, scalar="height")

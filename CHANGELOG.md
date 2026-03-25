@@ -20,6 +20,8 @@ All notable changes to this project are documented in this file.
 * Added deterministic example graph builders in `src/topographer/examples.py`
   for trivial, path, circular, star, tadpole, wheel, cubical, windmill,
   cave man, ladder, and balanced tree graphs
+* Added runnable pipeline example scripts for all current example graph
+  builders under `examples/`
 
 ### Changed
 
@@ -42,8 +44,8 @@ All notable changes to this project are documented in this file.
   simpler print-first walkthrough in `examples/path_graph_pipeline.py`
 * Added SVG plot output for the original graph, split tree, join tree, and
   contour tree in `examples/path_graph_pipeline.py`
-* Replaced gallery-specific example tests with deterministic tests for the new
-  path-graph example and reusable example graph builders
+* Replaced gallery-specific example tests with deterministic tests for the
+  graph-specific pipeline example scripts and reusable example graph builders
 * Simplified rendered graph and tree plots so node height follows the chosen
   scalar on the y-axis, while the x-axis is hidden and no grid/background
   styling is shown

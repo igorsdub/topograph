@@ -144,8 +144,13 @@ def plot_graph(G: nx.Graph, scalar: str = "scalar") -> dict[str, object]:
 def plot_tree(tree: MergeTree | ContourTree) -> dict[str, object]:
     """Return lightweight plotting data for a merge or contour tree."""
 
+    positions = (
+        _tree_scalar_layout(tree.graph, tree.scalar)
+        if nx.is_tree(tree.graph)
+        else scalar_layout(tree.graph, tree.scalar)
+    )
     return {
-        "positions": _tree_scalar_layout(tree.graph, tree.scalar),
+        "positions": positions,
         "edges": list(tree.graph.edges()),
         "nodes": list(tree.graph.nodes()),
     }
