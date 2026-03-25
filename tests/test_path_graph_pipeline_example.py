@@ -99,5 +99,17 @@ def test_path_graph_example_script_prints_walkthrough(capsys) -> None:
     assert "Join tree edges:" in output
     assert "Split tree edges:" in output
     assert "Contour tree edges:" in output
+    assert "Wrote SVG plots:" in output
     assert "Persistence pairs:" in output
     assert "Simplified contour tree edges (threshold=0.5):" in output
+
+
+def test_path_graph_example_script_writes_svg_plots(tmp_path: Path) -> None:
+    module = load_path_graph_pipeline_module()
+
+    module.main(output_dir=tmp_path)
+
+    assert (tmp_path / "01_original_graph.svg").exists()
+    assert (tmp_path / "02_split_tree.svg").exists()
+    assert (tmp_path / "03_join_tree.svg").exists()
+    assert (tmp_path / "04_contour_tree.svg").exists()

@@ -40,6 +40,8 @@ All notable changes to this project are documented in this file.
 * Added `matplotlib` to the example/runtime environment for rendered gallery output
 * Replaced the gallery-oriented `examples/basic_pipeline.py` example with the
   simpler print-first walkthrough in `examples/path_graph_pipeline.py`
+* Added SVG plot output for the original graph, split tree, join tree, and
+  contour tree in `examples/path_graph_pipeline.py`
 * Replaced gallery-specific example tests with deterministic tests for the new
   path-graph example and reusable example graph builders
 

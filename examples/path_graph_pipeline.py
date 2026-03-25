@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from pathlib import Path
+
 from topographer import (
     check_graph,
     compute_contour_tree_from_trees,
@@ -10,14 +12,17 @@ from topographer import (
     compute_split_tree,
     ensure_total_order,
     make_path_graph,
+    save_graph_plot,
+    save_tree_plot,
     simplify_tree_by_persistence,
 )
 
 SCALAR = "scalar"
 SIMPLIFY_THRESHOLD = 0.5
+OUTPUT_DIR = Path(__file__).resolve().parents[1] / "output" / "path_graph_pipeline"
 
 
-def main() -> None:
+def main(output_dir: Path = OUTPUT_DIR) -> None:
     """Run the path-graph walkthrough."""
 
     graph = make_path_graph(scalar=SCALAR)
@@ -44,6 +49,31 @@ def main() -> None:
     contour_tree = compute_contour_tree_from_trees(split_tree, join_tree)
     print("\nContour tree edges:")
     print(sorted(tuple(sorted(edge)) for edge in contour_tree.graph.edges()))
+
+    output_dir.mkdir(parents=True, exist_ok=True)
+    original_graph_path = save_graph_plot(
+        graph,
+        output_dir / "01_original_graph.svg",
+        scalar=SCALAR,
+        title="Original Graph",
+    )
+    split_tree_path = save_tree_plot(
+        split_tree,
+        output_dir / "02_split_tree.svg",
+        title="Split Tree",
+    )
+    join_tree_path = save_tree_plot(
+        join_tree,
+        output_dir / "03_join_tree.svg",
+        title="Join Tree",
+    )
+    contour_tree_path = save_tree_plot(
+        contour_tree,
+        output_dir / "04_contour_tree.svg",
+        title="Contour Tree",
+    )
+    print("\nWrote SVG plots:")
+    print([original_graph_path.name, split_tree_path.name, join_tree_path.name, contour_tree_path.name])
 
     persistence_pairs = compute_persistence(contour_tree, scalar=SCALAR)
     print("\nPersistence pairs:")

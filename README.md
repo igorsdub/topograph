@@ -88,11 +88,11 @@ Run it with:
 pixi run python examples/path_graph_pipeline.py
 ```
 
-It prints each pipeline step in order for a small path graph:
+It prints each pipeline step in order for a small path graph and writes SVG plots for:
 
 - original node scalars
 - validated and ordered scalars
-- join tree, split tree, and contour tree edges
+- the original graph, split tree, join tree, and contour tree
 - persistence pairs
 - simplified contour tree edges
 
