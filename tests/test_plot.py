@@ -6,6 +6,7 @@ from pathlib import Path
 
 import networkx as nx
 
+from topographer.models import MergeTree
 from topographer.persistence import compute_persistence
 from topographer.plot import (
     plot_graph,
@@ -26,6 +27,27 @@ def make_graph() -> nx.Graph:
     graph = nx.path_graph(3)
     nx.set_node_attributes(graph, {0: 0.0, 1: 2.0, 2: 1.0}, "height")
     return graph
+
+
+def make_branching_tree() -> MergeTree:
+    """Create a tree with a clear min-to-max trunk and side branches."""
+
+    graph = nx.Graph()
+    graph.add_edges_from([(0, 1), (1, 2), (2, 3), (1, 4), (4, 6), (2, 5)])
+    nx.set_node_attributes(
+        graph,
+        {
+            0: 0.0,
+            1: 1.0,
+            2: 2.0,
+            3: 3.0,
+            4: 1.5,
+            5: 2.5,
+            6: 1.75,
+        },
+        "height",
+    )
+    return MergeTree(graph=graph, scalar="height", kind="join")
 
 
 def test_plot_graph_returns_positions_edges_and_nodes() -> None:
@@ -57,6 +79,44 @@ def test_plot_tree_uses_tree_graph_and_scalar() -> None:
     data = plot_tree(contour_tree)
 
     assert set(data["nodes"]) == set(contour_tree.graph.nodes)
+
+
+def test_plot_tree_keeps_scalar_values_on_y_axis() -> None:
+    tree = make_branching_tree()
+
+    data = plot_tree(tree)
+
+    assert {node: position[1] for node, position in data["positions"].items()} == {
+        node: float(tree.graph.nodes[node]["height"]) for node in tree.graph.nodes
+    }
+
+
+def test_plot_tree_places_trunk_on_center_line() -> None:
+    tree = make_branching_tree()
+
+    positions = plot_tree(tree)["positions"]
+
+    for node in [0, 1, 2, 3]:
+        assert positions[node][0] == 0.0
+
+
+def test_plot_tree_places_off_trunk_branches_on_nonzero_sides() -> None:
+    tree = make_branching_tree()
+
+    positions = plot_tree(tree)["positions"]
+
+    assert positions[4][0] < 0.0
+    assert positions[6][0] < 0.0
+    assert positions[5][0] > 0.0
+
+
+def test_plot_tree_layout_is_deterministic() -> None:
+    tree = make_branching_tree()
+
+    first = plot_tree(tree)["positions"]
+    second = plot_tree(tree)["positions"]
+
+    assert first == second
 
 
 def test_plot_persistence_diagram_returns_point_data() -> None:
@@ -180,10 +240,11 @@ def test_save_graph_plot_uses_only_scalar_y_axis(monkeypatch, tmp_path: Path) ->
 def test_save_plot_helpers_write_files(tmp_path: Path) -> None:
     graph = make_graph()
     contour_tree = compute_contour_tree(graph, "height")
+    branching_tree = make_branching_tree()
     pairs = compute_persistence(contour_tree, scalar="height")
 
     graph_path = save_graph_plot(graph, tmp_path / "graph.png", scalar="height", title="Graph")
-    tree_path = save_tree_plot(contour_tree, tmp_path / "tree.png", title="Tree")
+    tree_path = save_tree_plot(branching_tree, tmp_path / "tree.png", title="Tree")
     diagram_path = save_persistence_diagram(
         pairs,
         tmp_path / "diagram.png",

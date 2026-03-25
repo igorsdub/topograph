@@ -47,6 +47,8 @@ All notable changes to this project are documented in this file.
 * Simplified rendered graph and tree plots so node height follows the chosen
   scalar on the y-axis, while the x-axis is hidden and no grid/background
   styling is shown
+* Added a deterministic planar tree layout for plotted join, split, and
+  contour trees with a centered min-to-max trunk and separated side branches
 
 ### Removed
 

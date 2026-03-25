@@ -22,6 +22,106 @@ def scalar_layout(
     }
 
 
+def _node_order_key(G: nx.Graph, node: object, scalar: str) -> tuple[float, str]:
+    """Return a stable ordering key based on scalar value and node identity."""
+
+    return (float(G.nodes[node][scalar]), repr(node))
+
+
+def _subtree_layout(
+    G: nx.Graph,
+    node: object,
+    parent: object,
+    scalar: str,
+    blocked: set[object],
+    next_leaf_x: float,
+) -> tuple[dict[object, float], float]:
+    """Assign relative x coordinates for a rooted subtree."""
+
+    children = sorted(
+        (
+            neighbor
+            for neighbor in G.neighbors(node)
+            if neighbor != parent and neighbor not in blocked
+        ),
+        key=lambda child: _node_order_key(G, child, scalar),
+    )
+    if not children:
+        return {node: next_leaf_x}, next_leaf_x + 1.0
+
+    positions: dict[object, float] = {}
+    child_x_values: list[float] = []
+    current_leaf_x = next_leaf_x
+    for child in children:
+        child_positions, current_leaf_x = _subtree_layout(
+            G,
+            child,
+            node,
+            scalar,
+            blocked,
+            current_leaf_x,
+        )
+        positions.update(child_positions)
+        child_x_values.append(child_positions[child])
+
+    positions[node] = sum(child_x_values) / len(child_x_values)
+    return positions, current_leaf_x
+
+
+def _tree_scalar_layout(
+    G: nx.Graph,
+    scalar: str,
+) -> dict[object, tuple[float, float]]:
+    """Place a tree with scalar-driven y coordinates and planar branch spacing."""
+
+    if not nx.is_tree(G):
+        raise ValueError("Tree plotting requires a tree graph.")
+
+    minimum = min(G.nodes, key=lambda node: _node_order_key(G, node, scalar))
+    maximum = max(G.nodes, key=lambda node: _node_order_key(G, node, scalar))
+    trunk = nx.shortest_path(G, source=minimum, target=maximum)
+    trunk_set = set(trunk)
+
+    positions = {
+        node: (0.0, float(G.nodes[node][scalar]))
+        for node in trunk
+    }
+    attachments = sorted(
+        (
+            (trunk_node, neighbor)
+            for trunk_node in trunk
+            for neighbor in G.neighbors(trunk_node)
+            if neighbor not in trunk_set
+        ),
+        key=lambda item: (
+            _node_order_key(G, item[0], scalar),
+            _node_order_key(G, item[1], scalar),
+        ),
+    )
+
+    side_offsets = {-1: 0.0, 1: 0.0}
+    for index, (trunk_node, root) in enumerate(attachments):
+        side = -1 if index % 2 == 0 else 1
+        relative_x, next_leaf_x = _subtree_layout(
+            G,
+            root,
+            trunk_node,
+            scalar,
+            trunk_set,
+            next_leaf_x=0.0,
+        )
+        width = max(1.0, next_leaf_x)
+        base_offset = side_offsets[side] + 1.0
+        for node, x_value in relative_x.items():
+            positions[node] = (
+                side * (base_offset + x_value),
+                float(G.nodes[node][scalar]),
+            )
+        side_offsets[side] += width + 1.0
+
+    return positions
+
+
 def tree_plot_data(
     G: nx.Graph,
     scalar: str = "scalar",
@@ -44,7 +144,11 @@ def plot_graph(G: nx.Graph, scalar: str = "scalar") -> dict[str, object]:
 def plot_tree(tree: MergeTree | ContourTree) -> dict[str, object]:
     """Return lightweight plotting data for a merge or contour tree."""
 
-    return tree_plot_data(tree.graph, tree.scalar)
+    return {
+        "positions": _tree_scalar_layout(tree.graph, tree.scalar),
+        "edges": list(tree.graph.edges()),
+        "nodes": list(tree.graph.nodes()),
+    }
 
 
 def plot_persistence_diagram(
@@ -92,9 +196,30 @@ def save_graph_plot(
 ) -> Path:
     """Render a graph or tree to an image file."""
 
+    return _save_network_plot(
+        graph,
+        path,
+        positions=plot_graph(graph, scalar=scalar)["positions"],
+        scalar=scalar,
+        title=title,
+        node_color=node_color,
+        edge_color=edge_color,
+    )
+
+
+def _save_network_plot(
+    graph: nx.Graph,
+    path: str | Path,
+    *,
+    positions: dict[object, tuple[float, float]],
+    scalar: str,
+    title: str,
+    node_color: str,
+    edge_color: str,
+) -> Path:
+    """Render a graph with precomputed node positions to an image file."""
+
     plt = _require_matplotlib()
-    data = plot_graph(graph, scalar=scalar)
-    positions = data["positions"]
     labels = {node: f"{node}\n{float(graph.nodes[node][scalar]):.1f}" for node in graph.nodes}
 
     figure, axis = plt.subplots(figsize=(8, 4.8))
@@ -139,9 +264,10 @@ def save_tree_plot(
 ) -> Path:
     """Render a merge tree or contour tree to an image file."""
 
-    return save_graph_plot(
+    return _save_network_plot(
         tree.graph,
         path,
+        positions=plot_tree(tree)["positions"],
         scalar=tree.scalar,
         title=title,
         node_color=node_color,
