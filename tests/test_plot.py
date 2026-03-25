@@ -29,6 +29,22 @@ def make_graph() -> nx.Graph:
     return graph
 
 
+def make_positioned_graph() -> nx.Graph:
+    """Create a graph with explicit node positions for plotting."""
+
+    graph = make_graph()
+    nx.set_node_attributes(
+        graph,
+        {
+            0: (0.0, 0.0),
+            1: (1.0, 0.5),
+            2: (0.5, 1.0),
+        },
+        "pos",
+    )
+    return graph
+
+
 def make_branching_tree() -> MergeTree:
     """Create a tree with a clear min-to-max trunk and side branches."""
 
@@ -51,13 +67,16 @@ def make_branching_tree() -> MergeTree:
 
 
 def test_plot_graph_returns_positions_edges_and_nodes() -> None:
-    graph = make_graph()
+    graph = make_positioned_graph()
 
     data = plot_graph(graph, scalar="height")
 
     assert set(data) == {"positions", "edges", "nodes"}
     assert set(data["nodes"]) == set(graph.nodes)
     assert len(data["positions"]) == graph.number_of_nodes()
+    assert data["positions"] == {
+        node: tuple(graph.nodes[node]["pos"]) for node in graph.nodes
+    }
 
 
 def test_scalar_layout_uses_scalar_values_for_y_positions() -> None:
@@ -150,8 +169,8 @@ def test_plot_persistence_diagram_can_use_scalar_coordinates() -> None:
     assert data["points"] == [(1.0, 2.0, 1.0)]
 
 
-def test_save_graph_plot_uses_only_scalar_y_axis(monkeypatch, tmp_path: Path) -> None:
-    graph = make_graph()
+def test_save_graph_plot_uses_graph_layout_and_colorbar(monkeypatch, tmp_path: Path) -> None:
+    graph = make_positioned_graph()
 
     class FakeAxisVisibility:
         def __init__(self) -> None:
@@ -170,44 +189,23 @@ def test_save_graph_plot_uses_only_scalar_y_axis(monkeypatch, tmp_path: Path) ->
     class FakeAxis:
         def __init__(self) -> None:
             self.title = ""
-            self.ylabel = ""
-            self.grid_called = False
             self.margins_value = None
-            self.tick_params_calls: list[dict[str, object]] = []
-            self.xaxis = FakeAxisVisibility()
-            self.yaxis = FakeAxisVisibility()
-            self.spines = {
-                "top": FakeSpine(),
-                "right": FakeSpine(),
-                "bottom": FakeSpine(),
-                "left": FakeSpine(),
-            }
+            self.axis_off = False
 
         def set_title(self, title: str) -> None:
             self.title = title
 
-        def set_ylabel(self, label: str) -> None:
-            self.ylabel = label
-
-        def get_xaxis(self) -> FakeAxisVisibility:
-            return self.xaxis
-
-        def get_yaxis(self) -> FakeAxisVisibility:
-            return self.yaxis
-
-        def tick_params(self, **kwargs: object) -> None:
-            self.tick_params_calls.append(kwargs)
+        def set_axis_off(self) -> None:
+            self.axis_off = True
 
         def margins(self, value: float) -> None:
             self.margins_value = value
-
-        def grid(self, *args: object, **kwargs: object) -> None:
-            self.grid_called = True
 
     class FakeFigure:
         def __init__(self) -> None:
             self.tight_layout_called = False
             self.saved_paths: list[Path] = []
+            self.colorbar_calls: list[dict[str, object]] = []
 
         def tight_layout(self) -> None:
             self.tight_layout_called = True
@@ -216,11 +214,15 @@ def test_save_graph_plot_uses_only_scalar_y_axis(monkeypatch, tmp_path: Path) ->
             self.saved_paths.append(path)
             path.write_text("fake image", encoding="utf-8")
 
+        def colorbar(self, mappable: object, ax: object, label: str) -> None:
+            self.colorbar_calls.append({"mappable": mappable, "ax": ax, "label": label})
+
     class FakePyplot:
         def __init__(self) -> None:
             self.figure = FakeFigure()
             self.axis = FakeAxis()
             self.closed_figures: list[FakeFigure] = []
+            self.cm = type("FakeColorMaps", (), {"viridis": object()})()
 
         def subplots(self, figsize: tuple[float, float]) -> tuple[FakeFigure, FakeAxis]:
             return self.figure, self.axis
@@ -229,22 +231,19 @@ def test_save_graph_plot_uses_only_scalar_y_axis(monkeypatch, tmp_path: Path) ->
             self.closed_figures.append(figure)
 
     fake_pyplot = FakePyplot()
+    node_collection = object()
 
     monkeypatch.setattr("topographer.plot._require_matplotlib", lambda: fake_pyplot)
     monkeypatch.setattr("topographer.plot.nx.draw_networkx_edges", lambda *args, **kwargs: None)
-    monkeypatch.setattr("topographer.plot.nx.draw_networkx_nodes", lambda *args, **kwargs: None)
+    monkeypatch.setattr("topographer.plot.nx.draw_networkx_nodes", lambda *args, **kwargs: node_collection)
     monkeypatch.setattr("topographer.plot.nx.draw_networkx_labels", lambda *args, **kwargs: None)
 
     output_path = save_graph_plot(graph, tmp_path / "graph.png", scalar="height", title="Graph")
 
     assert output_path.exists()
-    assert fake_pyplot.axis.ylabel == "height"
-    assert fake_pyplot.axis.grid_called is False
-    assert fake_pyplot.axis.xaxis.visible is False
-    assert fake_pyplot.axis.yaxis.visible is True
-    assert fake_pyplot.axis.spines["bottom"].visible is False
-    assert fake_pyplot.axis.tick_params_calls == [
-        {"axis": "x", "which": "both", "bottom": False, "labelbottom": False}
+    assert fake_pyplot.axis.axis_off is True
+    assert fake_pyplot.figure.colorbar_calls == [
+        {"mappable": node_collection, "ax": fake_pyplot.axis, "label": "height"}
     ]
 
 

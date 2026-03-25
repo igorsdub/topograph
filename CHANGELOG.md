@@ -51,6 +51,9 @@ All notable changes to this project are documented in this file.
   styling is shown
 * Added a deterministic planar tree layout for plotted join, split, and
   contour trees with a centered min-to-max trunk and separated side branches
+* Changed plain graph plots to use graph-layout positions, color nodes by the
+  selected scalar attribute, and render a scalar colorbar instead of using the
+  tree-style scalar-axis layout
 
 ### Removed
 

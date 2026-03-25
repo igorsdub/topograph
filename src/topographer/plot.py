@@ -22,6 +22,22 @@ def scalar_layout(
     }
 
 
+def _graph_layout(G: nx.Graph) -> dict[object, tuple[float, float]]:
+    """Return a deterministic layout for a plain graph plot."""
+
+    if all("pos" in G.nodes[node] for node in G.nodes):
+        return {
+            node: (float(G.nodes[node]["pos"][0]), float(G.nodes[node]["pos"][1]))
+            for node in G.nodes
+        }
+
+    positions = nx.spring_layout(G, seed=0)
+    return {
+        node: (float(position[0]), float(position[1]))
+        for node, position in positions.items()
+    }
+
+
 def _node_order_key(G: nx.Graph, node: object, scalar: str) -> tuple[float, str]:
     """Return a stable ordering key based on scalar value and node identity."""
 
@@ -138,7 +154,11 @@ def tree_plot_data(
 def plot_graph(G: nx.Graph, scalar: str = "scalar") -> dict[str, object]:
     """Return lightweight plotting data for an input graph."""
 
-    return tree_plot_data(G, scalar)
+    return {
+        "positions": _graph_layout(G),
+        "edges": list(G.edges()),
+        "nodes": list(G.nodes()),
+    }
 
 
 def plot_tree(tree: MergeTree | ContourTree) -> dict[str, object]:
@@ -199,15 +219,15 @@ def save_graph_plot(
     node_color: str = "#2b5d73",
     edge_color: str = "#516170",
 ) -> Path:
-    """Render a graph or tree to an image file."""
+    """Render a graph using its layout and scalar-based node coloring."""
 
-    return _save_network_plot(
+    del node_color
+    return _save_scalar_colored_graph_plot(
         graph,
         path,
         positions=plot_graph(graph, scalar=scalar)["positions"],
         scalar=scalar,
         title=title,
-        node_color=node_color,
         edge_color=edge_color,
     )
 
@@ -249,6 +269,49 @@ def _save_network_plot(
         linewidths=1.2,
     )
     nx.draw_networkx_labels(graph, pos=positions, labels=labels, ax=axis, font_size=9, font_color="white")
+
+    axis.margins(0.18)
+    figure.tight_layout()
+    output_path = Path(path)
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    figure.savefig(output_path, dpi=180)
+    plt.close(figure)
+    return output_path
+
+
+def _save_scalar_colored_graph_plot(
+    graph: nx.Graph,
+    path: str | Path,
+    *,
+    positions: dict[object, tuple[float, float]],
+    scalar: str,
+    title: str,
+    edge_color: str,
+) -> Path:
+    """Render a graph using layout positions and scalar-based node coloring."""
+
+    plt = _require_matplotlib()
+    labels = {node: str(node) for node in graph.nodes}
+    scalar_values = [float(graph.nodes[node][scalar]) for node in graph.nodes]
+
+    figure, axis = plt.subplots(figsize=(8, 4.8))
+    if title:
+        axis.set_title(title)
+    axis.set_axis_off()
+
+    nx.draw_networkx_edges(graph, pos=positions, ax=axis, edge_color=edge_color, width=2.2)
+    node_collection = nx.draw_networkx_nodes(
+        graph,
+        pos=positions,
+        ax=axis,
+        node_color=scalar_values,
+        cmap=plt.cm.viridis,
+        node_size=900,
+        edgecolors="#172033",
+        linewidths=1.2,
+    )
+    nx.draw_networkx_labels(graph, pos=positions, labels=labels, ax=axis, font_size=9, font_color="white")
+    figure.colorbar(node_collection, ax=axis, label=scalar)
 
     axis.margins(0.18)
     figure.tight_layout()
