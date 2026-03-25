@@ -128,8 +128,14 @@ def persistence_pairs(tree: MergeTree | ContourTree) -> list[PersistencePair]:
     """Compute persistence pairs from a merge tree or contour tree."""
 
     if isinstance(tree, ContourTree):
-        pairs = _pairs_from_merge_tree(tree.join_tree)
-        pairs.extend(_pairs_from_merge_tree(tree.split_tree))
+        if tree.join_tree is not None and tree.split_tree is not None:
+            pairs = _pairs_from_merge_tree(tree.join_tree)
+            pairs.extend(_pairs_from_merge_tree(tree.split_tree))
+        else:
+            pairs = _pairs_from_merge_tree(MergeTree(graph=tree.graph, scalar=tree.scalar, kind="join"))
+            pairs.extend(
+                _pairs_from_merge_tree(MergeTree(graph=tree.graph, scalar=tree.scalar, kind="split"))
+            )
         pairs.sort(
             key=lambda pair: (
                 -pair.persistence,

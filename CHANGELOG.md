@@ -17,6 +17,10 @@ All notable changes to this project are documented in this file.
 * Added compatibility helper APIs: `has_unique_scalars`, `make_total_ordering`,
   `compute_contour_tree_from_trees`, `compute_persistence`, and
   `simplify_tree_by_persistence`
+* Added a rendered gallery workflow to `examples/basic_pipeline.py` that writes
+  PNG stages, an `index.html`, and a `summary.json` for the full pipeline
+* Added contract tests for the basic pipeline gallery metadata and simplified
+  persistence semantics
 
 ### Changed
 
@@ -32,6 +36,9 @@ All notable changes to this project are documented in this file.
 * Rewrote `README.md` to describe the minimal package and current development workflow
 * Simplified `pixi.toml` and `pyproject.toml` to match the minimal NetworkX-based package
 * Tightened the build configuration so the built artifact contains only the minimal package
+* Recomputed simplified persistence diagrams from the simplified contour graph
+  instead of reusing the original join/split trees
+* Added `matplotlib` to the example/runtime environment for rendered gallery output
 
 ### Removed
 

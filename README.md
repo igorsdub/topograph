@@ -14,11 +14,12 @@ Minimal topological analysis for scalar graphs built on NetworkX.
 
 The package is intentionally simple:
 
-- Python + NetworkX only
+- Python + NetworkX core algorithms
 - dataclass-based outputs
 - deterministic tie handling
 - modular functions that are easy to test
 - lightweight plotting-data helpers for graphs, trees, and persistence pairs
+- a runnable gallery example rendered with `matplotlib`
 
 ## Package Layout
 
@@ -81,6 +82,23 @@ print(
 
 A standalone runnable example is available in
 [`examples/basic_pipeline.py`](examples/basic_pipeline.py).
+Run it with:
+
+```bash
+pixi run python examples/basic_pipeline.py
+```
+
+It writes a gallery to `output/pipeline_plots/` containing:
+
+- `01_initial_graph.png`
+- `02_split_tree.png`
+- `03_join_tree.png`
+- `04_contour_tree.png`
+- `05_persistence_diagram.png`
+- `06_simplified_persistence_diagram.png`
+- `07_simplified_contour_tree.png`
+- `index.html`
+- `summary.json`
 
 ## Development
 

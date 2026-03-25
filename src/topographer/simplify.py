@@ -71,8 +71,8 @@ def simplify_contour_tree(
     return ContourTree(
         graph=simplified_graph,
         scalar=contour_tree.scalar,
-        join_tree=contour_tree.join_tree,
-        split_tree=contour_tree.split_tree,
+        join_tree=None,
+        split_tree=None,
         arc_metadata=arc_metadata,
     )
 

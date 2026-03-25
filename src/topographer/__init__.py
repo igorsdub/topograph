@@ -14,8 +14,12 @@ from .plot import (
     plot_graph,
     plot_persistence_diagram,
     plot_tree,
+    save_graph_plot,
+    save_persistence_diagram,
+    save_tree_plot,
     scalar_layout,
     tree_plot_data,
+    write_gallery_html,
 )
 from .simplify import simplify_contour_tree, simplify_tree_by_persistence
 from .trees import (
@@ -45,8 +49,12 @@ __all__ = [
     "plot_persistence_diagram",
     "plot_tree",
     "run_pipeline",
+    "save_graph_plot",
+    "save_persistence_diagram",
+    "save_tree_plot",
     "scalar_layout",
     "simplify_contour_tree",
     "simplify_tree_by_persistence",
     "tree_plot_data",
+    "write_gallery_html",
 ]

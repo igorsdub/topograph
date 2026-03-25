@@ -7,6 +7,7 @@ platforms = ['osx-arm64']
 preview = ["pixi-build"]
 
 [dependencies]
+matplotlib = "*"
 python = "~=3.10.0"
 pytest = "*"
 ruff = "*"
@@ -30,4 +31,5 @@ hatchling = "*"
 hatchling = "*"
 
 [package.run-dependencies]
+matplotlib = "*"
 networkx = "*"
