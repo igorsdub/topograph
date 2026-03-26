@@ -165,7 +165,7 @@ def _tree_node_marker(graph: nx.Graph, node: object) -> str:
         if saddle_type == "join_sad":
             return "D"
         if saddle_type == "split_sad":
-            return "v"
+            return "D"
     return "o"
 
 
