@@ -210,6 +210,20 @@ def test_plot_tree_returns_markers_from_node_types() -> None:
     }
 
 
+def test_plot_tree_handles_empty_tree_graph() -> None:
+    empty_tree = MergeTree(graph=nx.Graph(), scalar="height", kind="join")
+
+    data = plot_tree(empty_tree)
+
+    assert data == {
+        "positions": {},
+        "edges": [],
+        "nodes": [],
+        "markers": {},
+        "marker_groups": {},
+    }
+
+
 def test_plot_tree_marks_cave_man_join_saddle_with_diamond() -> None:
     graph = make_cave_man_graph()
 

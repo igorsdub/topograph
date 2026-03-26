@@ -40,8 +40,9 @@ REQUIRED_HEADINGS = [
     "Join tree edges:",
     "Split tree edges:",
     "Contour tree edges:",
+    "Contour tree persistence pairs:",
     "Wrote SVG plots:",
-    "Persistence pairs:",
+    "Simplified contour tree persistence pairs:",
 ]
 
 
@@ -87,6 +88,9 @@ def test_example_pipeline_scripts_load_and_write_svg_plots(tmp_path: Path, capsy
         assert (output_dir / "02_split_tree.svg").exists()
         assert (output_dir / "03_join_tree.svg").exists()
         assert (output_dir / "04_contour_tree.svg").exists()
+        assert (output_dir / "05_contour_tree_persistence.svg").exists()
+        assert (output_dir / "06_simplified_contour_tree.svg").exists()
+        assert (output_dir / "07_simplified_contour_tree_persistence.svg").exists()
 
 
 def test_path_graph_builder_returns_connected_graph_with_unit_interval_scalars() -> None:
@@ -110,6 +114,10 @@ def test_path_graph_example_pipeline_produces_expected_outputs() -> None:
         contour_tree,
         persistence_pairs,
         threshold=0.5,
+    )
+    simplified_persistence_pairs = compute_persistence(
+        simplified_contour_tree,
+        scalar="scalar",
     )
 
     assert validated_scalars == {0: 0.0, 1: 0.6, 2: 0.2, 3: 1.0, 4: 0.3}
@@ -166,6 +174,10 @@ def test_path_graph_example_pipeline_produces_expected_outputs() -> None:
     assert sorted(tuple(sorted(edge)) for edge in simplified_contour_tree.graph.edges()) == [
         (3, 4)
     ]
+    assert [
+        (pair.extremum, pair.saddle, pair.persistence, pair.kind)
+        for pair in simplified_persistence_pairs
+    ] == []
 
 
 def test_path_graph_example_script_prints_walkthrough(capsys) -> None:
@@ -188,3 +200,6 @@ def test_path_graph_example_script_writes_svg_plots(tmp_path: Path) -> None:
     assert (tmp_path / "02_split_tree.svg").exists()
     assert (tmp_path / "03_join_tree.svg").exists()
     assert (tmp_path / "04_contour_tree.svg").exists()
+    assert (tmp_path / "05_contour_tree_persistence.svg").exists()
+    assert (tmp_path / "06_simplified_contour_tree.svg").exists()
+    assert (tmp_path / "07_simplified_contour_tree_persistence.svg").exists()

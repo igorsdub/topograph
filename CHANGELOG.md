@@ -69,6 +69,12 @@ All notable changes to this project are documented in this file.
   join saddles visually distinct from global maxima in merge-tree plots
 * Reduced the rendered size of diamond join-saddle markers so they fit labels
   more cleanly in tree plots
+* Expanded all runnable example pipeline scripts so they now save the raw
+  contour tree, its persistence diagram, the simplified contour tree, and a
+  persistence diagram recomputed from the simplified contour tree
+* Refactored the example walkthrough scripts behind a shared
+  `examples/_example_pipeline.py` runner so future example-pipeline changes can
+  be made in one place while keeping per-graph wrapper scripts
 
 ### Fixed
 
