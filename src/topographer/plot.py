@@ -425,10 +425,9 @@ def save_persistence_diagram(
     figure, axis = plt.subplots(figsize=(5.4, 5.4))
     if title:
         axis.set_title(title)
-    axis.set_xlabel("Birth Scalar")
-    axis.set_ylabel("Death Scalar")
+    axis.set_xlabel("Birth")
+    axis.set_ylabel("Death")
     axis.set_facecolor("#fffdf8")
-    axis.grid(color="#ddd4c7", linewidth=0.8, alpha=0.8)
 
     if points:
         x_values = [point[0] for point in points]

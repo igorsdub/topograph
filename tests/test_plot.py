@@ -503,3 +503,91 @@ def test_save_plot_helpers_write_files(tmp_path: Path) -> None:
     assert tree_path.exists()
     assert diagram_path.exists()
     assert html_path.exists()
+
+
+def test_save_persistence_diagram_uses_birth_death_labels_without_grid(
+    monkeypatch,
+    tmp_path: Path,
+) -> None:
+    graph = make_graph()
+    contour_tree = compute_contour_tree(graph, "height")
+    pairs = compute_persistence(contour_tree, scalar="height")
+
+    class FakeAxis:
+        def __init__(self) -> None:
+            self.xlabel = ""
+            self.ylabel = ""
+            self.facecolor = ""
+            self.grid_calls: list[dict[str, object]] = []
+            self.xlim = None
+            self.ylim = None
+            self.plots: list[dict[str, object]] = []
+            self.scatters: list[dict[str, object]] = []
+
+        def set_title(self, title: str) -> None:
+            self.title = title
+
+        def set_xlabel(self, value: str) -> None:
+            self.xlabel = value
+
+        def set_ylabel(self, value: str) -> None:
+            self.ylabel = value
+
+        def set_facecolor(self, value: str) -> None:
+            self.facecolor = value
+
+        def grid(self, **kwargs: object) -> None:
+            self.grid_calls.append(kwargs)
+
+        def plot(self, x_values: list[float], y_values: list[float], **kwargs: object) -> None:
+            self.plots.append({"x": x_values, "y": y_values, **kwargs})
+
+        def scatter(self, x_values: list[float], y_values: list[float], **kwargs: object) -> None:
+            self.scatters.append({"x": x_values, "y": y_values, **kwargs})
+
+        def set_xlim(self, left: float, right: float) -> None:
+            self.xlim = (left, right)
+
+        def set_ylim(self, low: float, high: float) -> None:
+            self.ylim = (low, high)
+
+    class FakeFigure:
+        def __init__(self) -> None:
+            self.tight_layout_called = False
+            self.saved_paths: list[Path] = []
+
+        def tight_layout(self) -> None:
+            self.tight_layout_called = True
+
+        def savefig(self, path: Path, dpi: int) -> None:
+            self.saved_paths.append(path)
+            path.write_text("fake image", encoding="utf-8")
+
+    class FakePyplot:
+        def __init__(self) -> None:
+            self.figure = FakeFigure()
+            self.axis = FakeAxis()
+            self.closed_figures: list[FakeFigure] = []
+
+        def subplots(self, figsize: tuple[float, float]) -> tuple[FakeFigure, FakeAxis]:
+            return self.figure, self.axis
+
+        def close(self, figure: FakeFigure) -> None:
+            self.closed_figures.append(figure)
+
+    fake_pyplot = FakePyplot()
+
+    monkeypatch.setattr("topographer.plot._require_matplotlib", lambda: fake_pyplot)
+
+    output_path = save_persistence_diagram(
+        pairs,
+        tmp_path / "diagram.png",
+        graph=graph,
+        scalar="height",
+        title="Diagram",
+    )
+
+    assert output_path.exists()
+    assert fake_pyplot.axis.xlabel == "Birth"
+    assert fake_pyplot.axis.ylabel == "Death"
+    assert fake_pyplot.axis.grid_calls == []
