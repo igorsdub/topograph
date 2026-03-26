@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import networkx as nx
 
-from topographer.examples import make_cave_man_graph
+from topographer.examples import make_cave_man_graph, make_path_graph
 from topographer.trees import compute_contour_tree, compute_join_tree, compute_split_tree
 
 
@@ -41,6 +41,33 @@ def node_types(graph: nx.Graph) -> dict[object, tuple[object, object]]:
         )
         for node in graph.nodes
     }
+
+
+def critical_skeleton_edges(graph: nx.Graph) -> list[tuple[object, object]]:
+    """Contract regular relay nodes and return the critical contour skeleton."""
+
+    critical_nodes = {
+        node
+        for node, data in graph.nodes(data=True)
+        if data["node_type"] != "reg"
+    }
+    skeleton_edges: set[tuple[object, object]] = set()
+
+    for node in critical_nodes:
+        for neighbor in graph.neighbors(node):
+            previous = node
+            current = neighbor
+
+            while current not in critical_nodes:
+                next_nodes = [candidate for candidate in graph.neighbors(current) if candidate != previous]
+                if not next_nodes:
+                    break
+                previous, current = current, next_nodes[0]
+
+            if current in critical_nodes and current != node:
+                skeleton_edges.add(tuple(sorted((node, current))))
+
+    return sorted(skeleton_edges)
 
 
 def test_join_and_split_trees_on_chain_graph() -> None:
@@ -115,7 +142,7 @@ def test_split_tree_stores_maximum_saddle_and_regular_node_types() -> None:
     }
 
 
-def test_contour_tree_contracts_degree_two_nodes() -> None:
+def test_contour_tree_preserves_all_nodes_in_augmented_output() -> None:
     graph = make_branch_graph()
 
     contour_tree = compute_contour_tree(
@@ -123,12 +150,12 @@ def test_contour_tree_contracts_degree_two_nodes() -> None:
         compute_join_tree(graph, "height"),
     )
 
-    assert contour_tree.graph.number_of_nodes() <= graph.number_of_nodes()
-    assert contour_tree.graph.number_of_edges() <= graph.number_of_nodes() - 1
+    assert contour_tree.graph.number_of_nodes() == graph.number_of_nodes()
+    assert contour_tree.graph.number_of_edges() == graph.number_of_nodes() - 1
     assert nx.is_tree(contour_tree.graph)
 
 
-def test_contour_tree_keeps_node_metadata_for_surviving_nodes() -> None:
+def test_contour_tree_keeps_augmented_node_metadata() -> None:
     graph = make_branch_graph()
 
     contour_tree = compute_contour_tree(
@@ -137,9 +164,57 @@ def test_contour_tree_keeps_node_metadata_for_surviving_nodes() -> None:
     )
 
     assert node_types(contour_tree.graph) == {
+        0: ("min", None),
+        1: ("sad", "join_sad"),
         2: ("min", None),
         3: ("max", None),
     }
     assert contour_tree.node_metadata == {
         node: dict(contour_tree.graph.nodes[node]) for node in contour_tree.graph.nodes
     }
+
+
+def test_cave_man_contour_tree_preserves_join_like_critical_connectivity() -> None:
+    graph = make_cave_man_graph()
+
+    contour_tree = compute_contour_tree(
+        compute_split_tree(graph),
+        compute_join_tree(graph),
+    )
+
+    assert sorted(contour_tree.graph.nodes()) == sorted(graph.nodes())
+    assert sorted(tuple(sorted(edge)) for edge in contour_tree.graph.edges()) == [
+        (0, 2),
+        (1, 2),
+        (2, 3),
+        (3, 5),
+        (4, 5),
+    ]
+    assert critical_skeleton_edges(contour_tree.graph) == [
+        (0, 2),
+        (1, 2),
+        (2, 5),
+        (4, 5),
+    ]
+
+
+def test_path_graph_contour_tree_does_not_reroute_critical_structure() -> None:
+    graph = make_path_graph()
+
+    contour_tree = compute_contour_tree(
+        compute_split_tree(graph),
+        compute_join_tree(graph),
+    )
+
+    assert sorted(tuple(sorted(edge)) for edge in contour_tree.graph.edges()) == [
+        (0, 1),
+        (1, 2),
+        (1, 3),
+        (3, 4),
+    ]
+    assert critical_skeleton_edges(contour_tree.graph) == [
+        (0, 1),
+        (1, 2),
+        (1, 3),
+        (3, 4),
+    ]

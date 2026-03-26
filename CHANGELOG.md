@@ -33,7 +33,8 @@ All notable changes to this project are documented in this file.
 * Labeled the terminal global maximum in join trees and the terminal global
   minimum in split trees so merge-tree endpoint types remain explicit in plots
   and inspection
-* Implemented contour tree construction by merging split and join trees and contracting degree-2 nodes
+* Implemented contour tree construction by combining split and join trees into
+  an augmented contour tree
 * Implemented persistence pair computation from merge and contour trees
 * Implemented threshold-based contour-tree simplification
 * Simplified module boundaries so tree and persistence code rely on shared package
@@ -81,6 +82,11 @@ All notable changes to this project are documented in this file.
 * Added cave-man graph regression coverage confirming join-tree node `2` stays
   classified as `join_sad` while node `5` remains the global `max`, and that
   plotting no longer conflates those two cases
+* Fixed contour-tree construction so the default contour tree now preserves the
+  critical skeleton from the split/join trees instead of inventing new
+  connectivity with a scalar-span spanning-tree heuristic
+* Fixed persistence-based simplification to preserve surviving augmented contour
+  paths instead of contracting away remaining regular relay nodes
 
 ### Removed
 

@@ -92,6 +92,13 @@ def _sync_node_metadata(graph: nx.Graph) -> dict[Node, dict[str, Any]]:
     }
 
 
+def _canonical_edge(edge: tuple[Node, Node]) -> tuple[Node, Node]:
+    """Return a deterministic undirected edge key."""
+
+    left, right = edge
+    return (left, right) if repr(left) <= repr(right) else (right, left)
+
+
 def _contour_node_metadata(
     node: Node,
     join_data: dict[str, Any],
@@ -123,6 +130,163 @@ def _contour_node_metadata(
             metadata["saddle_type"] = join_saddle or split_saddle
 
     return metadata
+
+
+def _merge_arc_metadata(
+    *metadata_entries: dict[str, Any] | None,
+) -> dict[str, Any]:
+    """Combine edge metadata from split and join trees deterministically."""
+
+    merged: dict[str, Any] = {}
+    sources: list[str] = []
+
+    for entry in metadata_entries:
+        if not entry:
+            continue
+
+        event = entry.get("event")
+        if isinstance(event, str) and event not in sources:
+            sources.append(event)
+
+        for key in ("component_root", "scalar"):
+            if key in entry and key not in merged:
+                merged[key] = entry[key]
+
+    if len(sources) == 1:
+        merged["event"] = sources[0]
+    elif sources:
+        merged["event"] = "contour"
+        merged["sources"] = tuple(sorted(sources))
+
+    return merged
+
+
+def _contour_critical_nodes(
+    contour_node_metadata: dict[Node, dict[str, Any]],
+) -> set[Node]:
+    """Return nodes that must stay explicit in the contour-tree skeleton."""
+
+    return {
+        node
+        for node, metadata in contour_node_metadata.items()
+        if metadata.get("node_type") != "reg"
+    }
+
+
+def _super_arc_path(
+    graph: nx.Graph,
+    start: Node,
+    neighbor: Node,
+    critical_nodes: set[Node],
+) -> list[Node]:
+    """Follow a maximal chain until the next contour-critical node."""
+
+    path = [start, neighbor]
+    previous = start
+    current = neighbor
+
+    while current not in critical_nodes:
+        next_nodes = [node for node in graph.neighbors(current) if node != previous]
+        if not next_nodes:
+            break
+        previous, current = current, next_nodes[0]
+        path.append(current)
+
+    return path
+
+
+def _reduced_merge_tree(
+    tree: MergeTree,
+    critical_nodes: set[Node],
+) -> tuple[nx.Graph, dict[tuple[Node, Node], list[Node]], dict[tuple[Node, Node], dict[str, Any]]]:
+    """Contract non-critical relay nodes into super-arcs."""
+
+    reduced = nx.Graph()
+    reduced.add_nodes_from(
+        (
+            node,
+            dict(tree.graph.nodes[node]),
+        )
+        for node in tree.graph.nodes
+        if node in critical_nodes
+    )
+
+    arc_paths: dict[tuple[Node, Node], list[Node]] = {}
+    arc_metadata: dict[tuple[Node, Node], dict[str, Any]] = {}
+
+    for node in reduced.nodes:
+        for neighbor in tree.graph.neighbors(node):
+            path = _super_arc_path(tree.graph, node, neighbor, critical_nodes)
+            target = path[-1]
+            if target == node:
+                continue
+
+            edge = _canonical_edge((node, target))
+            if edge in arc_paths:
+                continue
+
+            reduced.add_edge(*edge)
+            arc_paths[edge] = path if edge == (node, target) else list(reversed(path))
+
+            path_edges = [_canonical_edge((left, right)) for left, right in zip(path, path[1:])]
+            metadata_entries = [
+                tree.arc_metadata.get((left, right))
+                or tree.arc_metadata.get((right, left))
+                for left, right in zip(path, path[1:])
+            ]
+            arc_metadata[edge] = _merge_arc_metadata(*metadata_entries)
+            arc_metadata[edge]["source_tree"] = tree.kind
+            arc_metadata[edge]["path_edges"] = tuple(path_edges)
+
+    return reduced, arc_paths, arc_metadata
+
+
+def _skeleton_priority(
+    tree: MergeTree,
+    critical_nodes: set[Node],
+) -> tuple[int, int, int]:
+    """Score a merge tree by how much critical contour structure it exposes."""
+
+    saddle_count = sum(
+        1
+        for node in critical_nodes
+        if tree.graph.nodes[node].get("saddle_type") is not None
+    )
+    explicit_count = sum(
+        1
+        for node in critical_nodes
+        if tree.graph.nodes[node].get("node_type") != "reg"
+    )
+    kind_priority = 1 if tree.kind == "join" else 0
+    return saddle_count, explicit_count, kind_priority
+
+
+def _expanded_contour_graph(
+    base_tree: MergeTree,
+    contour_node_metadata: dict[Node, dict[str, Any]],
+    critical_nodes: set[Node],
+) -> tuple[nx.Graph, dict[tuple[Node, Node], dict[str, Any]]]:
+    """Expand a chosen contour skeleton back to an augmented contour tree."""
+
+    reduced_graph, arc_paths, reduced_arc_metadata = _reduced_merge_tree(base_tree, critical_nodes)
+
+    graph = nx.Graph()
+    graph.add_nodes_from((node, dict(metadata)) for node, metadata in contour_node_metadata.items())
+
+    arc_metadata: dict[tuple[Node, Node], dict[str, Any]] = {}
+
+    for edge in reduced_graph.edges():
+        canonical_edge = _canonical_edge(edge)
+        path = arc_paths[canonical_edge]
+        for left, right in zip(path, path[1:]):
+            canonical_path_edge = _canonical_edge((left, right))
+            graph.add_edge(left, right)
+            arc_metadata[canonical_path_edge] = {
+                **reduced_arc_metadata[canonical_edge],
+                "critical_arc": canonical_edge,
+            }
+
+    return graph, arc_metadata
 
 
 def _build_merge_tree(G: nx.Graph, scalar: str, ascending: bool) -> MergeTree:
@@ -232,7 +396,7 @@ def split_tree(G: nx.Graph, scalar: str = "scalar") -> MergeTree:
 
 
 def contour_tree(split: MergeTree, join: MergeTree) -> ContourTree:
-    """Merge split and join trees, then contract degree-2 relay nodes."""
+    """Build an augmented contour tree while preserving critical connectivity."""
 
     if split.kind == "join" and join.kind == "split":
         split, join = join, split
@@ -240,7 +404,6 @@ def contour_tree(split: MergeTree, join: MergeTree) -> ContourTree:
     if join.scalar != split.scalar:
         raise ValueError("Join tree and split tree must use the same scalar name.")
 
-    graph = nx.Graph()
     contour_node_metadata = {
         node: _contour_node_metadata(
             node,
@@ -250,37 +413,9 @@ def contour_tree(split: MergeTree, join: MergeTree) -> ContourTree:
         )
         for node in set(join.graph.nodes) | set(split.graph.nodes)
     }
-    graph.add_nodes_from((node, dict(metadata)) for node, metadata in contour_node_metadata.items())
-    graph.add_edges_from(join.graph.edges())
-    graph.add_edges_from(split.graph.edges())
-
-    arc_metadata: dict[tuple[Node, Node], dict[str, Any]] = {}
-    arc_metadata.update(join.arc_metadata)
-    arc_metadata.update(split.arc_metadata)
-
-    changed = True
-    while changed:
-        changed = False
-        for node in list(graph.nodes):
-            if graph.degree[node] != 2:
-                continue
-
-            neighbors = list(graph.neighbors(node))
-            if len(neighbors) != 2:
-                continue
-
-            contour_node_metadata.pop(node, None)
-            left, right = neighbors
-            graph.remove_node(node)
-            if left != right and not graph.has_edge(left, right):
-                graph.add_edge(left, right)
-
-            arc_metadata.pop((left, node), None)
-            arc_metadata.pop((node, left), None)
-            arc_metadata.pop((right, node), None)
-            arc_metadata.pop((node, right), None)
-            changed = True
-            break
+    critical_nodes = _contour_critical_nodes(contour_node_metadata)
+    base_tree = max((join, split), key=lambda tree: _skeleton_priority(tree, critical_nodes))
+    graph, arc_metadata = _expanded_contour_graph(base_tree, contour_node_metadata, critical_nodes)
 
     return ContourTree(
         graph=graph,

@@ -134,7 +134,14 @@ def test_path_graph_example_pipeline_produces_expected_outputs() -> None:
         (2, 4),
         (3, 4),
     ]
-    assert sorted(tuple(sorted(edge)) for edge in contour_tree.graph.edges()) == [(3, 4)]
+    assert contour_tree.graph.number_of_nodes() == graph.number_of_nodes()
+    assert contour_tree.graph.number_of_edges() == graph.number_of_nodes() - 1
+    assert sorted(tuple(sorted(edge)) for edge in contour_tree.graph.edges()) == [
+        (0, 1),
+        (1, 2),
+        (1, 3),
+        (3, 4),
+    ]
     assert {
         node: (join_tree.graph.nodes[node]["node_type"], join_tree.graph.nodes[node]["saddle_type"])
         for node in join_tree.graph.nodes
@@ -159,6 +166,9 @@ def test_path_graph_example_pipeline_produces_expected_outputs() -> None:
         node: (contour_tree.graph.nodes[node]["node_type"], contour_tree.graph.nodes[node]["saddle_type"])
         for node in contour_tree.graph.nodes
     } == {
+        0: ("min", None),
+        1: ("max", None),
+        2: ("min", None),
         3: ("max", None),
         4: ("min", None),
     }
@@ -172,12 +182,14 @@ def test_path_graph_example_pipeline_produces_expected_outputs() -> None:
     ]
     assert simplified_contour_tree is not None
     assert sorted(tuple(sorted(edge)) for edge in simplified_contour_tree.graph.edges()) == [
-        (3, 4)
+        (0, 1),
+        (1, 3),
+        (3, 4),
     ]
     assert [
         (pair.extremum, pair.saddle, pair.persistence, pair.kind)
         for pair in simplified_persistence_pairs
-    ] == []
+    ] == [(4, 3, 0.7, "join")]
 
 
 def test_path_graph_example_script_prints_walkthrough(capsys) -> None:

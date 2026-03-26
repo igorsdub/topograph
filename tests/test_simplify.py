@@ -61,8 +61,8 @@ def test_threshold_removes_low_persistence_features() -> None:
 
     simplified = simplify_contour_tree(contour_tree, pairs, threshold=1.5)
 
-    assert simplified.graph.number_of_nodes() < contour_tree.graph.number_of_nodes()
     assert simplified.graph.number_of_edges() < contour_tree.graph.number_of_edges()
+    assert sorted(tuple(sorted(edge)) for edge in simplified.graph.edges()) == [(0, 3), (1, 3)]
     assert simplified.scalar == contour_tree.scalar
     assert simplified.node_metadata == {
         node: dict(simplified.graph.nodes[node]) for node in simplified.graph.nodes
@@ -83,6 +83,6 @@ def test_high_threshold_removes_most_features() -> None:
 
     simplified = simplify_contour_tree(contour_tree, pairs, threshold=10.0)
 
-    assert simplified.graph.number_of_nodes() == 0
-    assert simplified.graph.number_of_edges() == 0
+    assert sorted(tuple(sorted(edge)) for edge in simplified.graph.edges()) == [(0, 3), (1, 3)]
+    assert sorted(simplified.graph.nodes()) == [0, 1, 3]
     assert simplified.arc_metadata["simplify_threshold"] == 10.0

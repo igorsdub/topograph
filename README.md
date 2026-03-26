@@ -93,6 +93,7 @@ It prints each pipeline step in order for a small path graph and writes SVG plot
 - original node scalars
 - validated and ordered scalars
 - the original graph, split tree, join tree, and contour tree
+- an augmented contour tree that preserves the split/join critical skeleton
 - persistence pairs
 - simplified contour tree edges
 

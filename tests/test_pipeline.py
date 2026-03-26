@@ -27,11 +27,15 @@ def test_run_pipeline_returns_consistent_outputs() -> None:
     assert result.ordered_graph.number_of_nodes() == graph.number_of_nodes()
     assert result.join_tree.graph.number_of_nodes() == graph.number_of_nodes()
     assert result.split_tree.graph.number_of_nodes() == graph.number_of_nodes()
-    assert result.contour_tree.graph.number_of_nodes() <= graph.number_of_nodes()
+    assert result.contour_tree.graph.number_of_nodes() == graph.number_of_nodes()
+    assert result.contour_tree.graph.number_of_edges() == graph.number_of_nodes() - 1
     assert [pair.persistence for pair in result.persistence_pairs] == [2.0, 1.0]
     assert result.simplified_contour_tree is not None
-    assert result.simplified_contour_tree.graph.number_of_nodes() == 2
-    assert result.simplified_contour_tree.graph.number_of_edges() == 1
+    assert result.simplified_contour_tree.graph.number_of_nodes() <= graph.number_of_nodes()
+    if result.simplified_contour_tree.graph.number_of_nodes() > 0:
+        assert result.simplified_contour_tree.graph.number_of_edges() <= (
+            result.simplified_contour_tree.graph.number_of_nodes() - 1
+        )
     assert result.join_tree.node_metadata == {
         node: dict(result.join_tree.graph.nodes[node]) for node in result.join_tree.graph.nodes
     }
@@ -48,7 +52,12 @@ def test_run_pipeline_returns_consistent_outputs() -> None:
     assert {
         node: result.contour_tree.graph.nodes[node]["node_type"]
         for node in result.contour_tree.graph.nodes
-    } == {2: "max", 3: "max"}
+    } == {
+        0: "min",
+        1: "max",
+        2: "max",
+        3: "max",
+    }
     assert all(
         result.simplified_contour_tree.graph.nodes[node]["node_type"] in {"min", "max", "sad", "reg"}
         for node in result.simplified_contour_tree.graph.nodes

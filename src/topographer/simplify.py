@@ -26,8 +26,8 @@ def simplify_contour_tree(
     """Remove contour-tree arcs whose attached persistence is below ``threshold``.
 
     The simplification is intentionally conservative: only edges with explicit
-    persistence metadata are removed, and the resulting graph is compressed again
-    by removing degree-2 relay vertices.
+    persistence metadata are removed, and surviving augmented paths are kept
+    intact.
     """
 
     simplified_graph = contour_tree.graph.copy()
@@ -54,25 +54,6 @@ def simplify_contour_tree(
 
     isolated_nodes = [node for node in simplified_graph.nodes if simplified_graph.degree(node) == 0]
     simplified_graph.remove_nodes_from(isolated_nodes)
-
-    changed = True
-    while changed:
-        changed = False
-        for node in list(simplified_graph.nodes):
-            if simplified_graph.degree(node) != 2:
-                continue
-
-            neighbors = list(simplified_graph.neighbors(node))
-            if len(neighbors) != 2 or neighbors[0] == neighbors[1]:
-                continue
-
-            if simplified_graph.has_edge(neighbors[0], neighbors[1]):
-                simplified_graph.remove_node(node)
-            else:
-                simplified_graph.add_edge(neighbors[0], neighbors[1])
-                simplified_graph.remove_node(node)
-            changed = True
-            break
 
     arc_metadata = dict(contour_tree.arc_metadata)
     arc_metadata["simplify_threshold"] = threshold
