@@ -208,6 +208,19 @@ def test_plot_tree_returns_markers_from_node_types() -> None:
     }
 
 
+def test_plot_tree_marks_explicit_global_endpoints_in_merge_trees() -> None:
+    graph = nx.path_graph(4)
+    nx.set_node_attributes(graph, {0: 0.0, 1: 1.0, 2: 2.0, 3: 3.0}, "height")
+
+    join_tree = compute_contour_tree(graph, "height").join_tree
+    split_tree = compute_contour_tree(graph, "height").split_tree
+
+    assert join_tree is not None
+    assert split_tree is not None
+    assert plot_tree(join_tree)["markers"][3] == "^"
+    assert plot_tree(split_tree)["markers"][0] == "v"
+
+
 def test_plot_persistence_diagram_returns_point_data() -> None:
     contour_tree = compute_contour_tree(make_graph(), "height")
     pairs = compute_persistence(contour_tree, scalar="height")

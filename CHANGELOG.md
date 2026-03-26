@@ -30,6 +30,9 @@ All notable changes to this project are documented in this file.
 
 * Implemented graph validation, deterministic scalar ordering, and a simple `UnionFind`
 * Implemented split tree and join tree sweeps using a simple filtration-style approach
+* Labeled the terminal global maximum in join trees and the terminal global
+  minimum in split trees so merge-tree endpoint types remain explicit in plots
+  and inspection
 * Implemented contour tree construction by merging split and join trees and contracting degree-2 nodes
 * Implemented persistence pair computation from merge and contour trees
 * Implemented threshold-based contour-tree simplification

@@ -134,14 +134,14 @@ def test_path_graph_example_pipeline_produces_expected_outputs() -> None:
         0: ("min", None),
         1: ("sad", "join_sad"),
         2: ("min", None),
-        3: ("sad", "join_sad"),
+        3: ("max", None),
         4: ("min", None),
     }
     assert {
         node: (split_tree.graph.nodes[node]["node_type"], split_tree.graph.nodes[node]["saddle_type"])
         for node in split_tree.graph.nodes
     } == {
-        0: ("reg", None),
+        0: ("min", None),
         1: ("max", None),
         2: ("sad", "split_sad"),
         3: ("max", None),

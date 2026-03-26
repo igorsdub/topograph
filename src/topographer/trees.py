@@ -201,6 +201,15 @@ def _build_merge_tree(G: nx.Graph, scalar: str, ascending: bool) -> MergeTree:
         representative[node] = node
         active.add(node)
 
+    global_minimum = ordered_nodes[0] if ascending else ordered_nodes[-1]
+    global_maximum = ordered_nodes[-1] if ascending else ordered_nodes[0]
+    endpoint = global_maximum if ascending else global_minimum
+    endpoint_type: NodeType = "max" if ascending else "min"
+    tree.nodes[endpoint]["node_type"] = endpoint_type
+    tree.nodes[endpoint]["saddle_type"] = None
+
+    node_metadata = _sync_node_metadata(tree)
+
     return MergeTree(
         graph=tree,
         scalar=scalar,

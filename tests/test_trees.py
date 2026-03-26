@@ -80,7 +80,7 @@ def test_join_tree_stores_minimum_saddle_and_regular_node_types() -> None:
         0: ("min", None),
         1: ("sad", "join_sad"),
         2: ("min", None),
-        3: ("reg", None),
+        3: ("max", None),
     }
     assert join_tree.node_metadata == {
         node: dict(join_tree.graph.nodes[node]) for node in join_tree.graph.nodes
@@ -94,7 +94,7 @@ def test_split_tree_stores_maximum_saddle_and_regular_node_types() -> None:
     split_tree = compute_split_tree(graph, "height")
 
     assert node_types(split_tree.graph) == {
-        0: ("reg", None),
+        0: ("min", None),
         1: ("max", None),
         2: ("sad", "split_sad"),
         3: ("max", None),
