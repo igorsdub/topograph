@@ -59,6 +59,9 @@ All notable changes to this project are documented in this file.
   tree-style scalar-axis layout
 * Preserved tree-node classification metadata on surviving contour-tree nodes
   after contour-tree contraction and persistence-based simplification
+* Changed tree plotting helpers so `plot_tree()` exposes node marker metadata
+  and `save_tree_plot()` renders node shapes from `node_type` / `saddle_type`
+  using triangles for extrema and saddles plus circles for regular nodes
 
 ### Removed
 

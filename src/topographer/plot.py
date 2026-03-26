@@ -151,6 +151,34 @@ def tree_plot_data(
     }
 
 
+def _tree_node_marker(graph: nx.Graph, node: object) -> str:
+    """Return the marker shape for a tree node classification."""
+
+    node_type = graph.nodes[node].get("node_type")
+    saddle_type = graph.nodes[node].get("saddle_type")
+
+    if node_type == "max":
+        return "^"
+    if node_type == "min":
+        return "v"
+    if node_type == "sad":
+        if saddle_type == "join_sad":
+            return "^"
+        if saddle_type == "split_sad":
+            return "v"
+    return "o"
+
+
+def _tree_marker_groups(graph: nx.Graph) -> dict[str, list[object]]:
+    """Group tree nodes by plotting marker."""
+
+    groups: dict[str, list[object]] = {}
+    for node in graph.nodes:
+        marker = _tree_node_marker(graph, node)
+        groups.setdefault(marker, []).append(node)
+    return groups
+
+
 def plot_graph(G: nx.Graph, scalar: str = "scalar") -> dict[str, object]:
     """Return lightweight plotting data for an input graph."""
 
@@ -173,6 +201,8 @@ def plot_tree(tree: MergeTree | ContourTree) -> dict[str, object]:
         "positions": positions,
         "edges": list(tree.graph.edges()),
         "nodes": list(tree.graph.nodes()),
+        "markers": {node: _tree_node_marker(tree.graph, node) for node in tree.graph.nodes},
+        "marker_groups": _tree_marker_groups(tree.graph),
     }
 
 
@@ -241,6 +271,7 @@ def _save_network_plot(
     title: str,
     node_color: str,
     edge_color: str,
+    marker_groups: dict[str, list[object]] | None = None,
 ) -> Path:
     """Render a graph with precomputed node positions to an image file."""
 
@@ -259,15 +290,29 @@ def _save_network_plot(
     axis.tick_params(axis="x", which="both", bottom=False, labelbottom=False)
 
     nx.draw_networkx_edges(graph, pos=positions, ax=axis, edge_color=edge_color, width=2.2)
-    nx.draw_networkx_nodes(
-        graph,
-        pos=positions,
-        ax=axis,
-        node_color=node_color,
-        node_size=900,
-        edgecolors="#172033",
-        linewidths=1.2,
-    )
+    if marker_groups is None:
+        nx.draw_networkx_nodes(
+            graph,
+            pos=positions,
+            ax=axis,
+            node_color=node_color,
+            node_size=900,
+            edgecolors="#172033",
+            linewidths=1.2,
+        )
+    else:
+        for marker, nodes in marker_groups.items():
+            nx.draw_networkx_nodes(
+                graph,
+                pos=positions,
+                nodelist=nodes,
+                ax=axis,
+                node_color=node_color,
+                node_size=900,
+                edgecolors="#172033",
+                linewidths=1.2,
+                node_shape=marker,
+            )
     nx.draw_networkx_labels(graph, pos=positions, labels=labels, ax=axis, font_size=9, font_color="white")
 
     axis.margins(0.18)
@@ -332,14 +377,16 @@ def save_tree_plot(
 ) -> Path:
     """Render a merge tree or contour tree to an image file."""
 
+    plot_data = plot_tree(tree)
     return _save_network_plot(
         tree.graph,
         path,
-        positions=plot_tree(tree)["positions"],
+        positions=plot_data["positions"],
         scalar=tree.scalar,
         title=title,
         node_color=node_color,
         edge_color=edge_color,
+        marker_groups=plot_data["marker_groups"],
     )
 
 

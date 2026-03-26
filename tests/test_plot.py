@@ -66,6 +66,44 @@ def make_branching_tree() -> MergeTree:
     return MergeTree(graph=graph, scalar="height", kind="join")
 
 
+def make_typed_tree() -> MergeTree:
+    """Create a tree that covers each supported tree marker type."""
+
+    graph = nx.Graph()
+    graph.add_edges_from(
+        [
+            ("min", "join"),
+            ("join", "max"),
+            ("join", "reg"),
+            ("reg", "split"),
+            ("split", "fallback"),
+        ]
+    )
+    nx.set_node_attributes(
+        graph,
+        {
+            "min": 0.0,
+            "join": 1.0,
+            "reg": 2.0,
+            "split": 3.0,
+            "fallback": 4.0,
+            "max": 5.0,
+        },
+        "height",
+    )
+    graph.nodes["min"]["node_type"] = "min"
+    graph.nodes["min"]["saddle_type"] = None
+    graph.nodes["join"]["node_type"] = "sad"
+    graph.nodes["join"]["saddle_type"] = "join_sad"
+    graph.nodes["reg"]["node_type"] = "reg"
+    graph.nodes["reg"]["saddle_type"] = None
+    graph.nodes["split"]["node_type"] = "sad"
+    graph.nodes["split"]["saddle_type"] = "split_sad"
+    graph.nodes["max"]["node_type"] = "max"
+    graph.nodes["max"]["saddle_type"] = None
+    return MergeTree(graph=graph, scalar="height", kind="join")
+
+
 def test_plot_graph_returns_positions_edges_and_nodes() -> None:
     graph = make_positioned_graph()
 
@@ -98,6 +136,7 @@ def test_plot_tree_uses_tree_graph_and_scalar() -> None:
     data = plot_tree(contour_tree)
 
     assert set(data["nodes"]) == set(contour_tree.graph.nodes)
+    assert set(data) == {"positions", "edges", "nodes", "markers", "marker_groups"}
 
 
 def test_plot_tree_keeps_scalar_values_on_y_axis() -> None:
@@ -147,6 +186,26 @@ def test_plot_tree_falls_back_to_scalar_layout_for_non_tree_graphs() -> None:
 
     assert set(data["nodes"]) == set(contour_tree.graph.nodes)
     assert all(position[0] == 0.0 for position in data["positions"].values())
+
+
+def test_plot_tree_returns_markers_from_node_types() -> None:
+    tree = make_typed_tree()
+
+    data = plot_tree(tree)
+
+    assert data["markers"] == {
+        "min": "v",
+        "join": "^",
+        "reg": "o",
+        "split": "v",
+        "fallback": "o",
+        "max": "^",
+    }
+    assert data["marker_groups"] == {
+        "v": ["min", "split"],
+        "^": ["join", "max"],
+        "o": ["reg", "fallback"],
+    }
 
 
 def test_plot_persistence_diagram_returns_point_data() -> None:
@@ -244,6 +303,122 @@ def test_save_graph_plot_uses_graph_layout_and_colorbar(monkeypatch, tmp_path: P
     assert fake_pyplot.axis.axis_off is True
     assert fake_pyplot.figure.colorbar_calls == [
         {"mappable": node_collection, "ax": fake_pyplot.axis, "label": "height"}
+    ]
+
+
+def test_save_tree_plot_draws_node_groups_by_marker(monkeypatch, tmp_path: Path) -> None:
+    tree = make_typed_tree()
+
+    class FakeAxisVisibility:
+        def __init__(self) -> None:
+            self.visible = True
+
+        def set_visible(self, value: bool) -> None:
+            self.visible = value
+
+    class FakeSpine:
+        def __init__(self) -> None:
+            self.visible = True
+
+        def set_visible(self, value: bool) -> None:
+            self.visible = value
+
+    class FakeAxis:
+        def __init__(self) -> None:
+            self.title = ""
+            self.xaxis = FakeAxisVisibility()
+            self.yaxis = FakeAxisVisibility()
+            self.tick_calls: list[dict[str, object]] = []
+            self.spines = {name: FakeSpine() for name in ("top", "right", "bottom")}
+            self.margins_value = None
+
+        def set_title(self, title: str) -> None:
+            self.title = title
+
+        def set_ylabel(self, value: str) -> None:
+            self.ylabel = value
+
+        def get_xaxis(self) -> FakeAxisVisibility:
+            return self.xaxis
+
+        def get_yaxis(self) -> FakeAxisVisibility:
+            return self.yaxis
+
+        def tick_params(self, **kwargs: object) -> None:
+            self.tick_calls.append(kwargs)
+
+        def margins(self, value: float) -> None:
+            self.margins_value = value
+
+    class FakeFigure:
+        def __init__(self) -> None:
+            self.tight_layout_called = False
+            self.saved_paths: list[Path] = []
+
+        def tight_layout(self) -> None:
+            self.tight_layout_called = True
+
+        def savefig(self, path: Path, dpi: int) -> None:
+            self.saved_paths.append(path)
+            path.write_text("fake image", encoding="utf-8")
+
+    class FakePyplot:
+        def __init__(self) -> None:
+            self.figure = FakeFigure()
+            self.axis = FakeAxis()
+            self.closed_figures: list[FakeFigure] = []
+
+        def subplots(self, figsize: tuple[float, float]) -> tuple[FakeFigure, FakeAxis]:
+            return self.figure, self.axis
+
+        def close(self, figure: FakeFigure) -> None:
+            self.closed_figures.append(figure)
+
+    draw_calls: list[dict[str, object]] = []
+    fake_pyplot = FakePyplot()
+
+    monkeypatch.setattr("topographer.plot._require_matplotlib", lambda: fake_pyplot)
+    monkeypatch.setattr("topographer.plot.nx.draw_networkx_edges", lambda *args, **kwargs: None)
+    monkeypatch.setattr(
+        "topographer.plot.nx.draw_networkx_nodes",
+        lambda *args, **kwargs: draw_calls.append(kwargs),
+    )
+    monkeypatch.setattr("topographer.plot.nx.draw_networkx_labels", lambda *args, **kwargs: None)
+
+    output_path = save_tree_plot(tree, tmp_path / "tree.png", title="Tree")
+
+    assert output_path.exists()
+    assert draw_calls == [
+        {
+            "pos": plot_tree(tree)["positions"],
+            "nodelist": ["min", "split"],
+            "ax": fake_pyplot.axis,
+            "node_color": "#2b5d73",
+            "node_size": 900,
+            "edgecolors": "#172033",
+            "linewidths": 1.2,
+            "node_shape": "v",
+        },
+        {
+            "pos": plot_tree(tree)["positions"],
+            "nodelist": ["join", "max"],
+            "ax": fake_pyplot.axis,
+            "node_color": "#2b5d73",
+            "node_size": 900,
+            "edgecolors": "#172033",
+            "linewidths": 1.2,
+            "node_shape": "^",
+        },
+        {
+            "pos": plot_tree(tree)["positions"],
+            "nodelist": ["reg", "fallback"],
+            "ax": fake_pyplot.axis,
+            "node_color": "#2b5d73",
+            "node_size": 900,
+            "edgecolors": "#172033",
+            "linewidths": 1.2,
+            "node_shape": "o",
+        },
     ]
 
 
