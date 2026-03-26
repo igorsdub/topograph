@@ -6,6 +6,7 @@ from pathlib import Path
 
 import networkx as nx
 
+from topographer.examples import make_cave_man_graph
 from topographer.models import MergeTree
 from topographer.persistence import compute_persistence
 from topographer.plot import (
@@ -18,7 +19,7 @@ from topographer.plot import (
     scalar_layout,
     write_gallery_html,
 )
-from topographer.trees import compute_contour_tree
+from topographer.trees import compute_contour_tree, compute_join_tree
 
 
 def make_graph() -> nx.Graph:
@@ -195,7 +196,7 @@ def test_plot_tree_returns_markers_from_node_types() -> None:
 
     assert data["markers"] == {
         "min": "v",
-        "join": "^",
+        "join": "D",
         "reg": "o",
         "split": "v",
         "fallback": "o",
@@ -203,9 +204,28 @@ def test_plot_tree_returns_markers_from_node_types() -> None:
     }
     assert data["marker_groups"] == {
         "v": ["min", "split"],
-        "^": ["join", "max"],
+        "D": ["join"],
+        "^": ["max"],
         "o": ["reg", "fallback"],
     }
+
+
+def test_plot_tree_marks_cave_man_join_saddle_with_diamond() -> None:
+    graph = make_cave_man_graph()
+
+    join_tree = compute_join_tree(graph)
+    plot_data = plot_tree(join_tree)
+
+    assert (
+        join_tree.graph.nodes[2]["node_type"],
+        join_tree.graph.nodes[2]["saddle_type"],
+    ) == ("sad", "join_sad")
+    assert (
+        join_tree.graph.nodes[5]["node_type"],
+        join_tree.graph.nodes[5]["saddle_type"],
+    ) == ("max", None)
+    assert plot_data["markers"][2] == "D"
+    assert plot_data["markers"][5] == "^"
 
 
 def test_plot_tree_marks_explicit_global_endpoints_in_merge_trees() -> None:
@@ -414,7 +434,17 @@ def test_save_tree_plot_draws_node_groups_by_marker(monkeypatch, tmp_path: Path)
         },
         {
             "pos": plot_tree(tree)["positions"],
-            "nodelist": ["join", "max"],
+            "nodelist": ["join"],
+            "ax": fake_pyplot.axis,
+            "node_color": "#2b5d73",
+            "node_size": 760,
+            "edgecolors": "#172033",
+            "linewidths": 1.2,
+            "node_shape": "D",
+        },
+        {
+            "pos": plot_tree(tree)["positions"],
+            "nodelist": ["max"],
             "ax": fake_pyplot.axis,
             "node_color": "#2b5d73",
             "node_size": 900,

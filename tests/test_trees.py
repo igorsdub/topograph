@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import networkx as nx
 
+from topographer.examples import make_cave_man_graph
 from topographer.trees import compute_contour_tree, compute_join_tree, compute_split_tree
 
 
@@ -85,6 +86,15 @@ def test_join_tree_stores_minimum_saddle_and_regular_node_types() -> None:
     assert join_tree.node_metadata == {
         node: dict(join_tree.graph.nodes[node]) for node in join_tree.graph.nodes
     }
+
+
+def test_join_tree_marks_cave_man_merge_node_as_join_saddle() -> None:
+    graph = make_cave_man_graph()
+
+    join_tree = compute_join_tree(graph)
+
+    assert node_types(join_tree.graph)[2] == ("sad", "join_sad")
+    assert node_types(join_tree.graph)[5] == ("max", None)
 
 
 def test_split_tree_stores_maximum_saddle_and_regular_node_types() -> None:

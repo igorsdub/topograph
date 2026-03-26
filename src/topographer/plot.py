@@ -163,7 +163,7 @@ def _tree_node_marker(graph: nx.Graph, node: object) -> str:
         return "v"
     if node_type == "sad":
         if saddle_type == "join_sad":
-            return "^"
+            return "D"
         if saddle_type == "split_sad":
             return "v"
     return "o"
@@ -177,6 +177,14 @@ def _tree_marker_groups(graph: nx.Graph) -> dict[str, list[object]]:
         marker = _tree_node_marker(graph, node)
         groups.setdefault(marker, []).append(node)
     return groups
+
+
+def _marker_node_size(marker: str) -> int:
+    """Return a marker-specific node size for rendered tree plots."""
+
+    if marker == "D":
+        return 760
+    return 900
 
 
 def plot_graph(G: nx.Graph, scalar: str = "scalar") -> dict[str, object]:
@@ -308,7 +316,7 @@ def _save_network_plot(
                 nodelist=nodes,
                 ax=axis,
                 node_color=node_color,
-                node_size=900,
+                node_size=_marker_node_size(marker),
                 edgecolors="#172033",
                 linewidths=1.2,
                 node_shape=marker,

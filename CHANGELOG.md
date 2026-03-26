@@ -65,6 +65,16 @@ All notable changes to this project are documented in this file.
 * Changed tree plotting helpers so `plot_tree()` exposes node marker metadata
   and `save_tree_plot()` renders node shapes from `node_type` / `saddle_type`
   using triangles for extrema and saddles plus circles for regular nodes
+* Changed tree plotting so `join_sad` nodes render as diamonds, which keeps
+  join saddles visually distinct from global maxima in merge-tree plots
+* Reduced the rendered size of diamond join-saddle markers so they fit labels
+  more cleanly in tree plots
+
+### Fixed
+
+* Added cave-man graph regression coverage confirming join-tree node `2` stays
+  classified as `join_sad` while node `5` remains the global `max`, and that
+  plotting no longer conflates those two cases
 
 ### Removed
 
