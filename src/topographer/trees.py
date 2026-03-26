@@ -8,7 +8,7 @@ from typing import Any, Hashable, Iterable
 import networkx as nx
 
 from .core import UnionFind, check_graph
-from .models import ContourTree, MergeTree
+from .models import ContourTree, MergeTree, NodeType, SaddleType
 
 Node = Hashable
 
@@ -63,6 +63,68 @@ def _component_representative(
     return min(roots, key=key)
 
 
+def _classify_sweep_node(
+    roots: set[Node],
+    *,
+    ascending: bool,
+) -> dict[str, NodeType | SaddleType | None]:
+    """Classify a node from the local sweep event."""
+
+    if not roots:
+        return {
+            "node_type": "min" if ascending else "max",
+            "saddle_type": None,
+        }
+    if len(roots) > 1:
+        return {
+            "node_type": "sad",
+            "saddle_type": "join_sad" if ascending else "split_sad",
+        }
+    return {"node_type": "reg", "saddle_type": None}
+
+
+def _sync_node_metadata(graph: nx.Graph) -> dict[Node, dict[str, Any]]:
+    """Mirror graph node attributes into a plain metadata mapping."""
+
+    return {
+        node: dict(data)
+        for node, data in graph.nodes(data=True)
+    }
+
+
+def _contour_node_metadata(
+    node: Node,
+    join_data: dict[str, Any],
+    split_data: dict[str, Any],
+    scalar: str,
+) -> dict[str, Any]:
+    """Combine join/split node metadata for a contour-tree node."""
+
+    join_type = join_data.get("node_type")
+    split_type = split_data.get("node_type")
+    join_saddle = join_data.get("saddle_type")
+    split_saddle = split_data.get("saddle_type")
+
+    metadata: dict[str, Any] = {
+        scalar: join_data.get(scalar, split_data.get(scalar)),
+        "node_type": "reg",
+        "saddle_type": None,
+    }
+
+    if join_type == "min":
+        metadata["node_type"] = "min"
+    elif split_type == "max":
+        metadata["node_type"] = "max"
+    elif join_saddle is not None or split_saddle is not None:
+        metadata["node_type"] = "sad"
+        if join_saddle is not None and split_saddle is not None:
+            metadata["saddle_sources"] = ("join_sad", "split_sad")
+        else:
+            metadata["saddle_type"] = join_saddle or split_saddle
+
+    return metadata
+
+
 def _build_merge_tree(G: nx.Graph, scalar: str, ascending: bool) -> MergeTree:
     """Build either a join tree or a split tree by sweeping scalar order."""
 
@@ -72,12 +134,23 @@ def _build_merge_tree(G: nx.Graph, scalar: str, ascending: bool) -> MergeTree:
     ordered_nodes = _ordered_nodes(G, scalar, ascending=ascending)
 
     tree = nx.Graph()
-    tree.add_nodes_from((node, {scalar: scalar_map[node]}) for node in G.nodes)
+    tree.add_nodes_from(
+        (
+            node,
+            {
+                scalar: scalar_map[node],
+                "node_type": "reg",
+                "saddle_type": None,
+            },
+        )
+        for node in G.nodes
+    )
 
     uf = UnionFind()
     active: set[Node] = set()
     representative: dict[Node, Node] = {}
     birth: dict[Node, Node] = {}
+    node_metadata: dict[Node, dict[str, Any]] = {}
     arc_metadata: dict[tuple[Node, Node], dict[str, Any]] = {}
 
     prefer_low = ascending
@@ -87,6 +160,9 @@ def _build_merge_tree(G: nx.Graph, scalar: str, ascending: bool) -> MergeTree:
         uf.add(node)
         active_neighbors = [neighbor for neighbor in G.neighbors(node) if neighbor in active]
         roots = {uf.find(neighbor) for neighbor in active_neighbors}
+        classification = _classify_sweep_node(roots, ascending=ascending)
+        tree.nodes[node].update(classification)
+        node_metadata[node] = dict(tree.nodes[node])
 
         if not roots:
             birth[node] = node
@@ -125,7 +201,13 @@ def _build_merge_tree(G: nx.Graph, scalar: str, ascending: bool) -> MergeTree:
         representative[node] = node
         active.add(node)
 
-    return MergeTree(graph=tree, scalar=scalar, kind=event_kind, arc_metadata=arc_metadata)
+    return MergeTree(
+        graph=tree,
+        scalar=scalar,
+        kind=event_kind,
+        node_metadata=node_metadata,
+        arc_metadata=arc_metadata,
+    )
 
 
 def join_tree(G: nx.Graph, scalar: str = "scalar") -> MergeTree:
@@ -150,8 +232,16 @@ def contour_tree(split: MergeTree, join: MergeTree) -> ContourTree:
         raise ValueError("Join tree and split tree must use the same scalar name.")
 
     graph = nx.Graph()
-    graph.add_nodes_from(join.graph.nodes(data=True))
-    graph.add_nodes_from(split.graph.nodes(data=True))
+    contour_node_metadata = {
+        node: _contour_node_metadata(
+            node,
+            join.node_metadata.get(node, dict(join.graph.nodes[node])),
+            split.node_metadata.get(node, dict(split.graph.nodes[node])),
+            join.scalar,
+        )
+        for node in set(join.graph.nodes) | set(split.graph.nodes)
+    }
+    graph.add_nodes_from((node, dict(metadata)) for node, metadata in contour_node_metadata.items())
     graph.add_edges_from(join.graph.edges())
     graph.add_edges_from(split.graph.edges())
 
@@ -170,6 +260,7 @@ def contour_tree(split: MergeTree, join: MergeTree) -> ContourTree:
             if len(neighbors) != 2:
                 continue
 
+            contour_node_metadata.pop(node, None)
             left, right = neighbors
             graph.remove_node(node)
             if left != right and not graph.has_edge(left, right):
@@ -187,6 +278,7 @@ def contour_tree(split: MergeTree, join: MergeTree) -> ContourTree:
         scalar=join.scalar,
         join_tree=join,
         split_tree=split,
+        node_metadata=_sync_node_metadata(graph),
         arc_metadata=arc_metadata,
     )
 

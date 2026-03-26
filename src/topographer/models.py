@@ -3,9 +3,12 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Any
+from typing import Any, Literal, TypeAlias
 
 import networkx as nx
+
+NodeType: TypeAlias = Literal["max", "min", "sad", "reg"]
+SaddleType: TypeAlias = Literal["join_sad", "split_sad"]
 
 
 @dataclass(slots=True)
@@ -19,6 +22,7 @@ class MergeTree:
     graph: nx.Graph
     scalar: str
     kind: str = ""
+    node_metadata: dict[Any, dict[str, Any]] = field(default_factory=dict)
     arc_metadata: dict[tuple[Any, Any], dict[str, Any]] = field(default_factory=dict)
 
 
@@ -30,6 +34,7 @@ class ContourTree:
     scalar: str
     join_tree: MergeTree | None = None
     split_tree: MergeTree | None = None
+    node_metadata: dict[Any, dict[str, Any]] = field(default_factory=dict)
     arc_metadata: dict[tuple[Any, Any], dict[str, Any]] = field(default_factory=dict)
 
 

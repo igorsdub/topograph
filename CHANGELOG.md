@@ -9,6 +9,9 @@ All notable changes to this project are documented in this file.
 * Created the minimal `src/topographer` package with:
   `__init__.py`, `api.py`, `core.py`, `trees.py`, `persistence.py`,
   `simplify.py`, `plot.py`, and `models.py`
+* Added explicit tree-node classification metadata with `node_type`
+  (`max`, `min`, `sad`, `reg`) and `saddle_type`
+  (`join_sad`, `split_sad`) on merge-tree and contour-tree nodes
 * Implemented the end-to-end `run_pipeline(G, scalar, simplify_threshold=None)` API
 * Added dataclass models for `MergeTree`, `ContourTree`, `PersistencePair`, and `PipelineResult`
 * Added focused deterministic test modules for core validation, tree construction,
@@ -54,6 +57,8 @@ All notable changes to this project are documented in this file.
 * Changed plain graph plots to use graph-layout positions, color nodes by the
   selected scalar attribute, and render a scalar colorbar instead of using the
   tree-style scalar-axis layout
+* Preserved tree-node classification metadata on surviving contour-tree nodes
+  after contour-tree contraction and persistence-based simplification
 
 ### Removed
 

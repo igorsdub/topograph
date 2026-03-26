@@ -30,6 +30,9 @@ def test_threshold_zero_keeps_the_contour_tree_unchanged() -> None:
     assert simplified.graph.number_of_nodes() == contour_tree.graph.number_of_nodes()
     assert simplified.graph.number_of_edges() == contour_tree.graph.number_of_edges()
     assert sorted(simplified.graph.edges()) == sorted(contour_tree.graph.edges())
+    assert simplified.node_metadata == {
+        node: dict(simplified.graph.nodes[node]) for node in simplified.graph.nodes
+    }
 
 
 def test_simplify_alias_matches_primary_helper() -> None:
@@ -61,6 +64,13 @@ def test_threshold_removes_low_persistence_features() -> None:
     assert simplified.graph.number_of_nodes() < contour_tree.graph.number_of_nodes()
     assert simplified.graph.number_of_edges() < contour_tree.graph.number_of_edges()
     assert simplified.scalar == contour_tree.scalar
+    assert simplified.node_metadata == {
+        node: dict(simplified.graph.nodes[node]) for node in simplified.graph.nodes
+    }
+    assert all(
+        simplified.graph.nodes[node]["node_type"] in {"min", "max", "sad", "reg"}
+        for node in simplified.graph.nodes
+    )
 
 
 def test_high_threshold_removes_most_features() -> None:

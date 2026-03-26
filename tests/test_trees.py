@@ -30,6 +30,18 @@ def normalized_edges(graph: nx.Graph) -> list[tuple[object, object]]:
     return sorted(tuple(sorted(edge)) for edge in graph.edges())
 
 
+def node_types(graph: nx.Graph) -> dict[object, tuple[object, object]]:
+    """Return compact node classification data for assertions."""
+
+    return {
+        node: (
+            graph.nodes[node]["node_type"],
+            graph.nodes[node]["saddle_type"],
+        )
+        for node in graph.nodes
+    }
+
+
 def test_join_and_split_trees_on_chain_graph() -> None:
     graph = make_chain_graph()
 
@@ -59,6 +71,40 @@ def test_tree_construction_is_deterministic_on_branch_graph() -> None:
     assert first_split.graph.number_of_edges() == graph.number_of_nodes() - 1
 
 
+def test_join_tree_stores_minimum_saddle_and_regular_node_types() -> None:
+    graph = make_branch_graph()
+
+    join_tree = compute_join_tree(graph, "height")
+
+    assert node_types(join_tree.graph) == {
+        0: ("min", None),
+        1: ("sad", "join_sad"),
+        2: ("min", None),
+        3: ("reg", None),
+    }
+    assert join_tree.node_metadata == {
+        node: dict(join_tree.graph.nodes[node]) for node in join_tree.graph.nodes
+    }
+
+
+def test_split_tree_stores_maximum_saddle_and_regular_node_types() -> None:
+    graph = nx.path_graph(5)
+    nx.set_node_attributes(graph, {0: 0.0, 1: 3.0, 2: 1.0, 3: 4.0, 4: 2.0}, "height")
+
+    split_tree = compute_split_tree(graph, "height")
+
+    assert node_types(split_tree.graph) == {
+        0: ("reg", None),
+        1: ("max", None),
+        2: ("sad", "split_sad"),
+        3: ("max", None),
+        4: ("reg", None),
+    }
+    assert split_tree.node_metadata == {
+        node: dict(split_tree.graph.nodes[node]) for node in split_tree.graph.nodes
+    }
+
+
 def test_contour_tree_contracts_degree_two_nodes() -> None:
     graph = make_branch_graph()
 
@@ -70,3 +116,20 @@ def test_contour_tree_contracts_degree_two_nodes() -> None:
     assert contour_tree.graph.number_of_nodes() <= graph.number_of_nodes()
     assert contour_tree.graph.number_of_edges() <= graph.number_of_nodes() - 1
     assert nx.is_tree(contour_tree.graph)
+
+
+def test_contour_tree_keeps_node_metadata_for_surviving_nodes() -> None:
+    graph = make_branch_graph()
+
+    contour_tree = compute_contour_tree(
+        compute_split_tree(graph, "height"),
+        compute_join_tree(graph, "height"),
+    )
+
+    assert node_types(contour_tree.graph) == {
+        2: ("min", None),
+        3: ("max", None),
+    }
+    assert contour_tree.node_metadata == {
+        node: dict(contour_tree.graph.nodes[node]) for node in contour_tree.graph.nodes
+    }

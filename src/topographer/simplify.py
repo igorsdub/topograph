@@ -9,6 +9,15 @@ import networkx as nx
 from topographer.models import ContourTree, PersistencePair
 
 
+def _sync_node_metadata(graph: nx.Graph) -> dict[object, dict[str, object]]:
+    """Mirror graph node attributes into contour-tree node metadata."""
+
+    return {
+        node: dict(data)
+        for node, data in graph.nodes(data=True)
+    }
+
+
 def simplify_contour_tree(
     contour_tree: ContourTree,
     persistence_pairs: Iterable[PersistencePair],
@@ -73,6 +82,7 @@ def simplify_contour_tree(
         scalar=contour_tree.scalar,
         join_tree=None,
         split_tree=None,
+        node_metadata=_sync_node_metadata(simplified_graph),
         arc_metadata=arc_metadata,
     )
 
